@@ -57,13 +57,16 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 h-screen flex overflow-hidden transition-colors duration-300">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 h-screen flex overflow-hidden transition-colors duration-300 relative">
 
     <!-- Container Tersembunyi Khusus Untuk Cetak Tracking -->
     <div id="printTrackingArea" class="hidden w-full bg-white text-black p-4 absolute inset-0 z-[100] overflow-visible"></div>
 
+    <!-- Overlay untuk Sidebar HP -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden transition-opacity opacity-0 md:hidden"></div>
+
     <!-- SIDEBAR (Admin Only) -->
-    <aside id="mainSidebar" class="w-64 bg-white dark:bg-slate-850 border-r border-slate-200 dark:border-slate-800 flex-col justify-between hidden md:flex transition-all z-30 admin-only shadow-soft shrink-0">
+    <aside id="mainSidebar" class="w-64 bg-white dark:bg-slate-850 border-r border-slate-200 dark:border-slate-800 flex-col justify-between flex transition-transform duration-300 ease-in-out transform -translate-x-full md:translate-x-0 fixed md:relative inset-y-0 left-0 z-50 admin-only shadow-soft shrink-0">
         <div>
             <div class="h-20 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
                 <div class="bg-gradient-to-br from-primary-500 to-primary-700 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30 mr-3 shrink-0">
@@ -105,34 +108,43 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+    <div class="flex-1 flex flex-col h-screen overflow-hidden w-full">
         
         <!-- TOPBAR -->
-        <header class="h-20 glass-panel z-20 flex justify-between items-center px-6 print:hidden shrink-0 border-b border-slate-200 dark:border-slate-800">
-            <div class="flex items-center gap-4">
-                <div class="md:hidden bg-gradient-to-br from-primary-500 to-primary-700 text-white w-9 h-9 rounded-lg flex items-center justify-center shadow-md">
+        <header class="h-20 glass-panel z-20 flex justify-between items-center px-4 sm:px-6 print:hidden shrink-0 border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-3 sm:gap-4">
+                <!-- Tombol Menu HP (Hanya Admin) -->
+                <button onclick="toggleSidebar()" class="admin-only hidden md:hidden bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm hover:bg-primary-200 transition-colors shrink-0">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <!-- Ikon Kotak untuk Publik / Admin di Desktop -->
+                <div class="hidden md:flex bg-gradient-to-br from-primary-500 to-primary-700 text-white w-9 h-9 rounded-lg items-center justify-center shadow-md shrink-0">
                     <i class="fas fa-check-double"></i>
                 </div>
+                <div class="md:hidden public-only bg-gradient-to-br from-primary-500 to-primary-700 text-white w-10 h-10 rounded-xl items-center justify-center shadow-md shrink-0 flex">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-white" id="greetingText">Selamat Datang!</h2>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                        <span id="currentDate">Memuat tanggal...</span>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-800 dark:text-white" id="greetingText">Selamat Datang!</h2>
+                    <p class="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        <span id="currentDate" class="hidden sm:inline">Memuat tanggal...</span>
                         <span id="cloudStatusBadge" class="hidden px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase tracking-wider border border-emerald-200"><i class="fas fa-cloud text-emerald-500 mr-1"></i> Online</span>
                     </p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button id="themeToggle" onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center hover:text-primary-600 dark:hover:text-primary-400 transition-colors shadow-sm">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="themeToggle" onclick="toggleDarkMode()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center hover:text-primary-600 dark:hover:text-primary-400 transition-colors shadow-sm">
                     <i class="fas fa-moon dark:hidden"></i>
                     <i class="fas fa-sun hidden dark:block"></i>
                 </button>
-                <button onclick="toggleAdmin()" id="btnLogin" class="public-only bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
-                    <i class="fas fa-lock"></i> Login Admin
+                <button onclick="toggleAdmin()" id="btnLogin" class="public-only bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-2 sm:px-4 sm:py-2 rounded-full text-xs font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                    <i class="fas fa-lock"></i> <span class="hidden sm:inline">Login Admin</span>
                 </button>
-                <div class="admin-only hidden items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-2 pr-4 py-1.5 rounded-full shadow-sm">
-                    <div class="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 flex items-center justify-center text-xs font-bold">AD</div>
-                    <span class="text-xs font-bold">Admin</span>
+                <div class="admin-only hidden items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-1.5 sm:pl-2 pr-3 sm:pr-4 py-1.5 rounded-full shadow-sm">
+                    <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 flex items-center justify-center text-[10px] sm:text-xs font-bold">AD</div>
+                    <span class="text-[10px] sm:text-xs font-bold">Admin</span>
                 </div>
             </div>
         </header>
@@ -243,23 +255,25 @@
 
                 <!-- Kanan: Tabel Rekap -->
                 <div class="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-850 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden relative">
-                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-850 z-10">
+                    <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-850 z-10">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800 dark:text-white">Database Rekap SPJ</h2>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola dan edit seluruh rekapan kegiatan.</p>
                         </div>
                         
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <div class="bg-slate-100 dark:bg-slate-900 p-1 rounded-xl flex">
-                                <button id="btnViewMatrix" onclick="setView('matrix')" class="px-4 py-2 text-xs font-bold rounded-lg bg-white dark:bg-slate-800 shadow-sm text-primary-700 dark:text-primary-400 transition-all"><i class="fas fa-th-large mr-1"></i> Matriks</button>
-                                <button id="btnViewList" onclick="setView('list')" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all"><i class="fas fa-list mr-1"></i> List</button>
+                        <div class="flex items-center gap-2 flex-wrap w-full md:w-auto">
+                            <div class="bg-slate-100 dark:bg-slate-900 p-1 rounded-xl flex w-full sm:w-auto overflow-x-auto">
+                                <button id="btnViewMatrix" onclick="setView('matrix')" class="px-4 py-2 text-xs font-bold rounded-lg bg-white dark:bg-slate-800 shadow-sm text-primary-700 dark:text-primary-400 transition-all flex-1 sm:flex-none text-center"><i class="fas fa-th-large mr-1"></i> Matriks</button>
+                                <button id="btnViewList" onclick="setView('list')" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all flex-1 sm:flex-none text-center"><i class="fas fa-list mr-1"></i> List</button>
                             </div>
-                            <select id="filterTahun" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold py-2.5 px-4 focus:ring-primary-500 outline-none dark:text-white"></select>
-                            <div class="relative w-48">
-                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs"></i>
-                                <input type="text" id="searchInput" placeholder="Cari nama..." class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-sm w-full focus:ring-primary-500 outline-none dark:text-white">
+                            <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                                <select id="filterTahun" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold py-2.5 px-4 focus:ring-primary-500 outline-none dark:text-white flex-1 sm:w-28"></select>
+                                <div class="relative flex-1 sm:w-48">
+                                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" id="searchInput" placeholder="Cari nama..." class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-sm w-full focus:ring-primary-500 outline-none dark:text-white">
+                                </div>
+                                <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-all shrink-0" title="Export Excel"><i class="fas fa-file-excel"></i></button>
                             </div>
-                            <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-all" title="Export Excel"><i class="fas fa-file-excel"></i></button>
                         </div>
                     </div>
 
@@ -275,7 +289,7 @@
                         </div>
                     </div>
                     
-                    <div class="bg-white dark:bg-slate-850 px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-sm font-medium z-10">
+                    <div class="bg-white dark:bg-slate-850 px-4 sm:px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs sm:text-sm font-medium z-10 flex-wrap gap-2">
                         <div class="text-slate-500">Total: <span id="totalDataCount" class="font-bold text-primary-600 dark:text-primary-400">0</span> <span id="textTotalPrefix">Pegawai</span></div>
                         <div class="font-bold text-slate-700 dark:text-slate-300">Total Anggaran: <span id="totalNominalFooter" class="text-emerald-600 dark:text-emerald-400">Rp 0</span></div>
                         <button onclick="clearAllData()" class="text-red-500 hover:text-red-600 font-bold transition-colors flex items-center gap-1.5"><i class="fas fa-trash-alt"></i> Hapus Semua</button>
@@ -288,42 +302,42 @@
                 <div class="max-w-[1600px] mx-auto">
                     
                     <!-- Header Dashboard -->
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 tracking-print-hide">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 tracking-print-hide">
                         <div>
-                            <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white">Dashboard Monitoring BOK</h2>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Pantau transparansi dan progres kelengkapan SPJ Puskesmas.</p>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-white">Dashboard Monitoring BOK</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Pantau transparansi dan progres kelengkapan SPJ Puskesmas.</p>
                         </div>
                         <div class="flex items-center gap-3 bg-white dark:bg-slate-850 p-2 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-                            <span class="text-sm font-bold text-slate-600 dark:text-slate-400 pl-2">Periode:</span>
-                            <select id="dashFilterTahun" class="bg-slate-50 dark:bg-slate-900 border-none rounded-xl text-sm font-bold py-2 px-4 focus:ring-0 cursor-pointer dark:text-white" onchange="renderDashboard()"></select>
+                            <span class="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400 pl-2">Periode:</span>
+                            <select id="dashFilterTahun" class="bg-slate-50 dark:bg-slate-900 border-none rounded-xl text-xs sm:text-sm font-bold py-2 px-4 focus:ring-0 cursor-pointer dark:text-white" onchange="renderDashboard()"></select>
                         </div>
                     </div>
 
                     <!-- Summary Cards Premium -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 tracking-print-hide">
-                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 tracking-print-hide">
+                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-5 sm:p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
                             <div class="absolute top-0 right-0 w-24 h-24 bg-primary-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                            <div class="bg-primary-100 dark:bg-primary-900/40 w-12 h-12 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 mb-4 shadow-sm"><i class="fas fa-file-signature text-xl"></i></div>
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Kegiatan</p>
-                            <h3 class="text-3xl font-black text-slate-800 dark:text-white" id="dashTotalKegiatan">0</h3>
+                            <div class="bg-primary-100 dark:bg-primary-900/40 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 mb-3 sm:mb-4 shadow-sm"><i class="fas fa-file-signature text-lg sm:text-xl"></i></div>
+                            <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Kegiatan</p>
+                            <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white" id="dashTotalKegiatan">0</h3>
                         </div>
-                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
+                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-5 sm:p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
                             <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                            <div class="bg-emerald-100 dark:bg-emerald-900/40 w-12 h-12 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4 shadow-sm"><i class="fas fa-wallet text-xl"></i></div>
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Serapan SPJ</p>
-                            <h3 class="text-2xl font-black text-slate-800 dark:text-white truncate" id="dashTotalDana">Rp 0</h3>
+                            <div class="bg-emerald-100 dark:bg-emerald-900/40 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3 sm:mb-4 shadow-sm"><i class="fas fa-wallet text-lg sm:text-xl"></i></div>
+                            <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Serapan SPJ</p>
+                            <h3 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white truncate" id="dashTotalDana">Rp 0</h3>
                         </div>
-                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
+                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-5 sm:p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
                             <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                            <div class="bg-amber-100 dark:bg-amber-900/40 w-12 h-12 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400 mb-4 shadow-sm"><i class="fas fa-exclamation-circle text-xl"></i></div>
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Perlu Revisi</p>
-                            <h3 class="text-3xl font-black text-slate-800 dark:text-white" id="dashBelumLengkap">0 <span class="text-sm font-medium text-slate-400">Berkas</span></h3>
+                            <div class="bg-amber-100 dark:bg-amber-900/40 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3 sm:mb-4 shadow-sm"><i class="fas fa-exclamation-circle text-lg sm:text-xl"></i></div>
+                            <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Perlu Revisi</p>
+                            <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white" id="dashBelumLengkap">0 <span class="text-[10px] sm:text-sm font-medium text-slate-400">Berkas</span></h3>
                         </div>
-                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
+                        <div class="bg-white dark:bg-slate-850 rounded-3xl p-5 sm:p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
                             <div class="absolute top-0 right-0 w-24 h-24 bg-accent-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                            <div class="bg-accent-100 dark:bg-accent-900/40 w-12 h-12 rounded-2xl flex items-center justify-center text-accent-600 dark:text-accent-400 mb-4 shadow-sm"><i class="fas fa-user-md text-xl"></i></div>
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Pegawai Terlibat</p>
-                            <h3 class="text-3xl font-black text-slate-800 dark:text-white" id="dashTotalPegawai">0 <span class="text-sm font-medium text-slate-400">Orang</span></h3>
+                            <div class="bg-accent-100 dark:bg-accent-900/40 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-accent-600 dark:text-accent-400 mb-3 sm:mb-4 shadow-sm"><i class="fas fa-user-md text-lg sm:text-xl"></i></div>
+                            <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Pegawai Terlibat</p>
+                            <h3 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white" id="dashTotalPegawai">0 <span class="text-[10px] sm:text-sm font-medium text-slate-400">Orang</span></h3>
                         </div>
                     </div>
 
@@ -331,20 +345,20 @@
                     <div style="display: none;" aria-hidden="true"><canvas id="chartStatus"></canvas><canvas id="chartBerkas"></canvas></div>
 
                     <!-- MONITORING KEPATUHAN BOARD (Modern Redesign) -->
-                    <div id="trackingContainer" class="mb-8">
-                        <div class="flex flex-col md:flex-row justify-between items-end mb-4 gap-4 tracking-print-hide">
+                    <div id="trackingContainer" class="mb-6 sm:mb-8">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4 tracking-print-hide">
                             <div>
-                                <h3 class="font-extrabold text-slate-800 dark:text-white text-xl flex items-center gap-2"><i class="fas fa-satellite-dish text-primary-500"></i> Radar Kepatuhan</h3>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Pantau pegawai yang sudah dan belum menyetor SPJ bulan ini.</p>
+                                <h3 class="font-extrabold text-slate-800 dark:text-white text-lg sm:text-xl flex items-center gap-2"><i class="fas fa-satellite-dish text-primary-500"></i> Radar Kepatuhan</h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Pantau pegawai yang sudah dan belum menyetor SPJ bulan ini.</p>
                             </div>
-                            <div class="flex items-center gap-2 bg-white dark:bg-slate-850 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-                                <select id="dashFilterBulan" class="bg-slate-50 dark:bg-slate-900 border-none rounded-xl text-sm font-bold py-2.5 px-4 focus:ring-0 cursor-pointer dark:text-white" onchange="renderDashboard()">
+                            <div class="flex items-center gap-2 w-full md:w-auto bg-white dark:bg-slate-850 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+                                <select id="dashFilterBulan" class="flex-1 md:w-auto bg-slate-50 dark:bg-slate-900 border-none rounded-xl text-xs sm:text-sm font-bold py-2.5 px-3 sm:px-4 focus:ring-0 cursor-pointer dark:text-white" onchange="renderDashboard()">
                                     <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
                                     <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
                                     <option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
                                     <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
                                 </select>
-                                <button onclick="printTracking()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold flex items-center gap-2">
+                                <button onclick="printTracking()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-xl transition-all shadow-md text-xs sm:text-sm font-bold flex items-center gap-2 shrink-0">
                                     <i class="fas fa-print"></i> Cetak
                                 </button>
                             </div>
@@ -353,40 +367,40 @@
                         <!-- Progress Bar Kepatuhan -->
                         <div class="bg-white dark:bg-slate-850 p-4 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 mb-6 tracking-print-hide">
                             <div class="flex justify-between items-end mb-2">
-                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tingkat Kepatuhan Puskesmas</span>
-                                <span class="text-xl font-black text-primary-600 dark:text-primary-400" id="progressText">0%</span>
+                                <span class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tingkat Kepatuhan Puskesmas</span>
+                                <span class="text-lg sm:text-xl font-black text-primary-600 dark:text-primary-400" id="progressText">0%</span>
                             </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden">
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 sm:h-3 rounded-full overflow-hidden">
                                 <div id="progressBar" class="bg-gradient-to-r from-primary-400 to-emerald-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
                             </div>
                         </div>
 
                         <!-- 2 Panels -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                             <!-- Panel Sudah -->
-                            <div class="bg-white dark:bg-slate-850 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col h-96 print-auto-height overflow-hidden">
-                                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-900/10">
-                                    <h4 class="font-extrabold text-emerald-700 dark:text-emerald-400 text-lg flex items-center gap-2"><i class="fas fa-check-circle"></i> Sudah Masuk</h4>
-                                    <span id="countSudah" class="bg-emerald-500 text-white text-xs font-bold w-7 h-7 flex items-center justify-center rounded-full shadow-sm">0</span>
+                            <div class="bg-white dark:bg-slate-850 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col h-[300px] sm:h-96 print-auto-height overflow-hidden">
+                                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-900/10">
+                                    <h4 class="font-extrabold text-emerald-700 dark:text-emerald-400 text-base sm:text-lg flex items-center gap-2"><i class="fas fa-check-circle"></i> Sudah Masuk</h4>
+                                    <span id="countSudah" class="bg-emerald-500 text-white text-xs font-bold w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full shadow-sm">0</span>
                                 </div>
-                                <ul id="listSudahKumpul" class="p-4 overflow-y-auto flex-1 space-y-2 bg-slate-50/30 dark:bg-transparent custom-scrollbar"></ul>
+                                <ul id="listSudahKumpul" class="p-3 sm:p-4 overflow-y-auto flex-1 space-y-2 bg-slate-50/30 dark:bg-transparent custom-scrollbar"></ul>
                             </div>
                             <!-- Panel Belum -->
-                            <div class="bg-white dark:bg-slate-850 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col h-96 print-auto-height overflow-hidden">
-                                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-red-50/50 dark:bg-red-900/10">
-                                    <h4 class="font-extrabold text-red-600 dark:text-red-400 text-lg flex items-center gap-2"><i class="fas fa-times-circle"></i> Belum Masuk</h4>
-                                    <span id="countBelum" class="bg-red-500 text-white text-xs font-bold w-7 h-7 flex items-center justify-center rounded-full shadow-sm">0</span>
+                            <div class="bg-white dark:bg-slate-850 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col h-[300px] sm:h-96 print-auto-height overflow-hidden">
+                                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-red-50/50 dark:bg-red-900/10">
+                                    <h4 class="font-extrabold text-red-600 dark:text-red-400 text-base sm:text-lg flex items-center gap-2"><i class="fas fa-times-circle"></i> Belum Masuk</h4>
+                                    <span id="countBelum" class="bg-red-500 text-white text-xs font-bold w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full shadow-sm">0</span>
                                 </div>
-                                <ul id="listBelumKumpul" class="p-4 overflow-y-auto flex-1 space-y-2 bg-slate-50/30 dark:bg-transparent custom-scrollbar"></ul>
+                                <ul id="listBelumKumpul" class="p-3 sm:p-4 overflow-y-auto flex-1 space-y-2 bg-slate-50/30 dark:bg-transparent custom-scrollbar"></ul>
                             </div>
                         </div>
                     </div>
 
                     <!-- TABEL DETAIL PUBLIK (Menggantikan fungsi matriks agar bisa dilihat publik) -->
                     <div class="bg-white dark:bg-slate-850 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden tracking-print-hide">
-                        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-                            <h3 class="font-extrabold text-slate-800 dark:text-white text-xl">Rincian Kelengkapan Berkas</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Cek kekurangan dan catatan revisi SPJ Anda di sini.</p>
+                        <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+                            <h3 class="font-extrabold text-slate-800 dark:text-white text-lg sm:text-xl">Rincian Kelengkapan Berkas</h3>
+                            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Cek kekurangan dan catatan revisi SPJ Anda di sini.</p>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse min-w-[900px]">
@@ -410,24 +424,24 @@
             <!-- TAB 3: MASTER PEGAWAI (Admin Only) -->
             <main id="tabPegawai" class="hidden absolute inset-0 overflow-y-auto p-4 sm:p-8 admin-only fade-in">
                 <div class="max-w-[1000px] mx-auto bg-white dark:bg-slate-850 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden">
-                    <div class="bg-gradient-to-r from-primary-700 to-primary-600 px-8 py-6 flex justify-between items-center text-white">
+                    <div class="bg-gradient-to-r from-primary-700 to-primary-600 px-6 sm:px-8 py-5 sm:py-6 flex justify-between items-center text-white">
                         <div>
-                            <h2 class="text-2xl font-extrabold flex items-center gap-3"><i class="fas fa-users-cog opacity-80"></i> Master Data Pegawai</h2>
-                            <p class="text-primary-100 text-sm mt-1">Kelola nama acuan resmi untuk form dan Dashboard.</p>
+                            <h2 class="text-xl sm:text-2xl font-extrabold flex items-center gap-2 sm:gap-3"><i class="fas fa-users-cog opacity-80"></i> Master Pegawai</h2>
+                            <p class="text-primary-100 text-xs sm:text-sm mt-1">Kelola nama acuan resmi untuk form dan Dashboard.</p>
                         </div>
-                        <div class="bg-white/20 px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-md">Total: <span id="masterPegawaiCount" class="text-lg">0</span></div>
+                        <div class="bg-white/20 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold backdrop-blur-md">Total: <span id="masterPegawaiCount" class="text-base sm:text-lg">0</span></div>
                     </div>
 
-                    <div class="p-8">
-                        <form id="formMasterPegawai" class="mb-8 flex gap-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <input type="text" id="inputMasterPegawai" required placeholder="Ketik Nama Lengkap beserta Gelar..." class="flex-1 bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-3 focus:ring-2 focus:ring-primary-500 text-sm font-medium outline-none shadow-sm dark:text-white">
-                            <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-primary-500/30 transition-all flex items-center gap-2"><i class="fas fa-plus"></i> Simpan</button>
+                    <div class="p-4 sm:p-8">
+                        <form id="formMasterPegawai" class="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4 bg-slate-50 dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <input type="text" id="inputMasterPegawai" required placeholder="Ketik Nama Lengkap beserta Gelar..." class="flex-1 bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 text-sm font-medium outline-none shadow-sm dark:text-white">
+                            <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 sm:px-8 py-3 rounded-xl shadow-lg shadow-primary-500/30 transition-all flex items-center justify-center gap-2"><i class="fas fa-plus"></i> Simpan</button>
                         </form>
 
                         <div>
-                            <div class="flex justify-between items-end mb-4">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-2">
                                 <h3 class="font-bold text-slate-700 dark:text-slate-300">Daftar Pegawai Terdaftar</h3>
-                                <div class="relative w-64">
+                                <div class="relative w-full sm:w-64">
                                     <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs"></i>
                                     <input type="text" id="searchMaster" placeholder="Cari nama..." class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm w-full outline-none focus:ring-1 focus:ring-primary-500 dark:text-white shadow-sm" onkeyup="renderMasterPegawai()">
                                 </div>
@@ -449,18 +463,18 @@
     <div id="detailPegawaiModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 print:hidden transition-opacity">
         <div class="absolute inset-0" onclick="closeDetailPegawai()"></div>
         <div class="relative bg-white dark:bg-slate-850 rounded-3xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] z-10 fade-in border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-6 py-5 flex justify-between items-center border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-tr from-primary-500 to-accent-500 text-white h-14 w-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg shadow-primary-500/30" id="detailPegawaiInitial">A</div>
+            <div class="px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="bg-gradient-to-tr from-primary-500 to-accent-500 text-white h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg shadow-primary-500/30" id="detailPegawaiInitial">A</div>
                     <div>
-                        <h3 class="font-extrabold text-2xl text-slate-800 dark:text-white leading-tight" id="detailPegawaiName">Nama Pegawai</h3>
-                        <div class="flex gap-2 text-xs font-semibold text-slate-500 mt-1">
-                            <span class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-md">Tahun <span id="detailPegawaiYear" class="text-primary-600 dark:text-primary-400">2024</span></span>
-                            <span class="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30 px-2.5 py-1 rounded-md" id="detailTotalDana">Rp 0</span>
+                        <h3 class="font-extrabold text-lg sm:text-2xl text-slate-800 dark:text-white leading-tight truncate max-w-[200px] sm:max-w-xs" id="detailPegawaiName">Nama Pegawai</h3>
+                        <div class="flex gap-2 text-[10px] sm:text-xs font-semibold text-slate-500 mt-1">
+                            <span class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md">Tahun <span id="detailPegawaiYear" class="text-primary-600 dark:text-primary-400">2024</span></span>
+                            <span class="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md" id="detailTotalDana">Rp 0</span>
                         </div>
                     </div>
                 </div>
-                <button onclick="closeDetailPegawai()" class="w-10 h-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"><i class="fas fa-times text-lg"></i></button>
+                <button onclick="closeDetailPegawai()" class="w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center shrink-0"><i class="fas fa-times text-base sm:text-lg"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 relative bg-white dark:bg-slate-850 p-2 custom-scrollbar">
                 <div class="space-y-2" id="detailPegawaiList"></div>
@@ -472,43 +486,43 @@
     <div id="quickModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[110] flex items-center justify-center p-4 print:hidden">
         <div class="absolute inset-0" onclick="closeQuickModal()"></div>
         <div class="relative bg-white dark:bg-slate-850 rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[95vh] z-10 fade-in border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="bg-gradient-to-r from-primary-700 to-primary-600 px-6 py-5 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-extrabold text-xl flex items-center gap-2" id="quickModalTitle"><i class="fas fa-edit opacity-80"></i> Edit SPJ</h3>
+            <div class="bg-gradient-to-r from-primary-700 to-primary-600 px-5 sm:px-6 py-4 sm:py-5 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-extrabold text-lg sm:text-xl flex items-center gap-2" id="quickModalTitle"><i class="fas fa-edit opacity-80"></i> Edit SPJ</h3>
                 <button onclick="closeQuickModal()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full transition-colors flex items-center justify-center"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 custom-scrollbar">
-                <form id="quickForm" class="p-6 space-y-5">
+                <form id="quickForm" class="p-5 sm:p-6 space-y-4 sm:space-y-5">
                     <input type="hidden" id="quickId">
                     <input type="hidden" id="quickNamaHidden">
                     
-                    <div class="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-2xl border border-primary-100 dark:border-primary-800/30 flex flex-col gap-2">
-                        <div class="flex justify-between items-center"><span class="text-primary-600 dark:text-primary-400 text-[10px] uppercase font-bold tracking-wider">Pegawai</span><span id="quickNama" class="font-bold text-slate-800 dark:text-white text-sm"></span></div>
+                    <div class="bg-primary-50 dark:bg-primary-900/20 p-3 sm:p-4 rounded-2xl border border-primary-100 dark:border-primary-800/30 flex flex-col gap-2">
+                        <div class="flex justify-between items-center"><span class="text-primary-600 dark:text-primary-400 text-[10px] uppercase font-bold tracking-wider">Pegawai</span><span id="quickNama" class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm truncate max-w-[150px] sm:max-w-xs"></span></div>
                         <div class="h-px w-full bg-primary-100 dark:bg-primary-800/30"></div>
-                        <div class="flex justify-between items-center"><span class="text-primary-600 dark:text-primary-400 text-[10px] uppercase font-bold tracking-wider">Periode</span><span id="quickPeriode" class="font-bold text-slate-800 dark:text-white text-sm bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-primary-100 dark:border-slate-700 shadow-sm"></span></div>
+                        <div class="flex justify-between items-center"><span class="text-primary-600 dark:text-primary-400 text-[10px] uppercase font-bold tracking-wider">Periode</span><span id="quickPeriode" class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-primary-100 dark:border-slate-700 shadow-sm"></span></div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Tgl Input</label>
-                            <input type="date" id="quickTanggal" required class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary-500 text-sm outline-none dark:text-white transition-all">
+                            <input type="date" id="quickTanggal" required class="w-full px-3 py-2 sm:py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary-500 text-xs sm:text-sm outline-none dark:text-white transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Program</label>
-                            <input type="text" id="quickProgram" list="listProgramDef" placeholder="Ketik/Pilih" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary-500 text-sm outline-none dark:text-white transition-all">
+                            <input type="text" id="quickProgram" list="listProgramDef" placeholder="Ketik/Pilih" class="w-full px-3 py-2 sm:py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary-500 text-xs sm:text-sm outline-none dark:text-white transition-all">
                         </div>
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Nominal (Rp)</label>
-                        <input type="number" id="quickNominal" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary-500 text-sm outline-none dark:text-white transition-all">
+                        <input type="number" id="quickNominal" class="w-full px-3 py-2 sm:py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary-500 text-xs sm:text-sm outline-none dark:text-white transition-all">
                     </div>
 
-                    <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <div class="flex justify-between items-center mb-3">
-                            <label class="text-sm font-bold text-slate-800 dark:text-white">Ceklis Berkas</label>
+                            <label class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white">Ceklis Berkas</label>
                             <label class="flex items-center gap-1.5 cursor-pointer">
-                                <input type="checkbox" id="checkAllQuick" onchange="toggleCheckAll('quickBerkas', this.checked)" class="w-4 h-4 text-primary-600 rounded bg-white border-slate-300">
-                                <span class="text-[10px] font-bold text-primary-700 dark:text-primary-400 bg-primary-100 dark:bg-primary-900/50 px-2 py-1 rounded-md">LENGKAP SEMUA</span>
+                                <input type="checkbox" id="checkAllQuick" onchange="toggleCheckAll('quickBerkas', this.checked)" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-600 rounded bg-white border-slate-300">
+                                <span class="text-[9px] sm:text-[10px] font-bold text-primary-700 dark:text-primary-400 bg-primary-100 dark:bg-primary-900/50 px-2 py-1 rounded-md">LENGKAP SEMUA</span>
                             </label>
                         </div>
                         <div class="grid grid-cols-2 gap-2" id="quickChecklistContainer"></div>
@@ -516,12 +530,12 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Catatan</label>
-                        <textarea id="quickKeterangan" rows="2" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none dark:text-white transition-all"></textarea>
+                        <textarea id="quickKeterangan" rows="2" class="w-full px-3 py-2 sm:py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 outline-none dark:text-white transition-all"></textarea>
                     </div>
 
-                    <div class="flex gap-3 pt-2">
-                        <button type="button" onclick="closeQuickModal()" class="w-1/3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">Batal</button>
-                        <button type="submit" class="w-2/3 bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary-500/30 flex justify-center items-center gap-2 transform active:scale-95 transition-all"><i class="fas fa-save"></i> Simpan Edit</button>
+                    <div class="flex gap-2 sm:gap-3 pt-2">
+                        <button type="button" onclick="closeQuickModal()" class="w-1/3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">Batal</button>
+                        <button type="submit" class="w-2/3 bg-primary-600 hover:bg-primary-700 text-white py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm shadow-lg shadow-primary-500/30 flex justify-center items-center gap-2 transform active:scale-95 transition-all"><i class="fas fa-save"></i> Simpan Edit</button>
                     </div>
                 </form>
             </div>
@@ -540,15 +554,30 @@
         let currentView = 'matrix';
         let activeDetailPegawai = { nama: null, tahun: null }; 
 
-        // Variabel Firebase Global (Agar dikenali seluruh fungsi)
+        // Variabel Firebase Global
         let db, fbCollection, fbDoc, fbSetDoc, fbDeleteDoc, fbOnSnapshot;
         let appId, currentUser;
         let useFirebase = false;
 
         let isAdmin = localStorage.getItem('soLengkapAdmin') === 'true';
+        let globalAdminPwd = localStorage.getItem('soLengkapPwd') || 'admin';
 
-        // Helper
         const escJS = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+        // --- SISTEM TOGGLE SIDEBAR HP ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
 
         // --- INIT FIREBASE (ASYNC) ---
         async function initFirebase() {
@@ -557,7 +586,6 @@
                 const firebaseAuth = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
                 const firebaseFirestore = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
 
-                // 1. PASTE FIREBASE CONFIG ANDA DI SINI
                 const firebaseConfig = {
                     apiKey: "AIzaSyBl6KbWks1IvaH_3hklp9VRJRe1qyP-a3o",
                     authDomain: "ceklist-5d351.firebaseapp.com",
@@ -578,10 +606,8 @@
                 fbDeleteDoc = firebaseFirestore.deleteDoc;
                 fbOnSnapshot = firebaseFirestore.onSnapshot;
 
-                // 2. GANTI DENGAN NAMA PUSKESMAS ANDA (Tanpa spasi, gunakan tanda strip)
                 appId = 'ceklist-puskesmas-v1';
 
-                // Login secara anonim ke Firebase
                 await firebaseAuth.signInAnonymously(auth);
 
                 currentUser = auth.currentUser;
@@ -639,7 +665,6 @@
         });
 
         // --- SISTEM FIREBASE SYNC KUSTOM ---
-
         async function migrateLocalToFirebase() {
             if (!useFirebase || !currentUser) return;
             const migratedFlag = localStorage.getItem('fb_migrated_v2_2');
@@ -651,6 +676,10 @@
                 if (masterPegawai.length > 0) saveMasterData();
                 if (dataNihil.length > 0) saveNihilData();
                 
+                const localPwd = localStorage.getItem('soLengkapPwd');
+                if (localPwd && localPwd !== 'admin') {
+                    fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), { adminPassword: localPwd }, {merge: true});
+                }
                 localStorage.setItem('fb_migrated_v2_2', 'true');
             }
         }
@@ -703,6 +732,17 @@
                     }
                 },
                 (error) => console.error("Firebase Nihil Error:", error)
+            );
+
+            fbOnSnapshot(
+                fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'),
+                (docSnap) => {
+                    if (docSnap.exists() && docSnap.data().adminPassword) {
+                        globalAdminPwd = docSnap.data().adminPassword;
+                        localStorage.setItem('soLengkapPwd', globalAdminPwd);
+                    }
+                },
+                (error) => console.error("Firebase Settings Error:", error)
             );
         }
 
@@ -812,18 +852,21 @@
                     const oldP = Swal.getPopup().querySelector('#oldPwd').value;
                     const newP = Swal.getPopup().querySelector('#newPwd').value;
                     const confP = Swal.getPopup().querySelector('#confPwd').value;
-                    const currentPwd = localStorage.getItem('soLengkapPwd') || 'admin';
 
                     if (!oldP || !newP || !confP) Swal.showValidationMessage(`Harap isi semua kolom`);
-                    else if (oldP !== currentPwd) Swal.showValidationMessage(`Sandi lama salah`);
+                    else if (oldP !== globalAdminPwd) Swal.showValidationMessage(`Sandi lama salah`);
                     else if (newP !== confP) Swal.showValidationMessage(`Sandi baru dan konfirmasi tidak cocok`);
                     
                     return newP;
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
+                    globalAdminPwd = result.value;
                     localStorage.setItem('soLengkapPwd', result.value);
-                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Sandi admin telah diubah.', timer: 2000, showConfirmButton: false });
+                    if(useFirebase && currentUser) {
+                        fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), { adminPassword: result.value }, {merge: true});
+                    }
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Sandi admin telah diubah untuk semua perangkat.', timer: 2000, showConfirmButton: false });
                 }
             });
         }
@@ -835,15 +878,14 @@
                 window.location.reload();
             } else {
                 Swal.fire({
-                    title: 'Akses Admin',
+                    title: 'Otorisasi Admin',
                     input: 'password',
-                    inputPlaceholder: 'Masukkan sandi admin',
+                    inputPlaceholder: '********',
                     showCancelButton: true,
                     confirmButtonText: 'Masuk',
                     confirmButtonColor: '#0F766E'
                 }).then(res => {
-                    const currentPwd = localStorage.getItem('soLengkapPwd') || 'admin';
-                    if(res.value === currentPwd) {
+                    if(res.value === globalAdminPwd) {
                         localStorage.setItem('soLengkapAdmin', 'true');
                         window.location.reload();
                     } else if (res.value) {
@@ -871,6 +913,13 @@
             if(!isAdmin && tabId !== 'dashboard') {
                 Swal.fire('Akses Dibatasi', 'Anda harus login sebagai Admin untuk mengakses menu ini.', 'warning');
                 return;
+            }
+
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('mainSidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
             }
 
             ['tabData', 'tabDashboard', 'tabPegawai'].forEach(id => document.getElementById(id).classList.add('hidden'));
@@ -955,7 +1004,6 @@
             renderTable();
         }
 
-        // --- MASTER DATA PEGAWAI LOGIC ---
         function updateSelectPegawai() {
             const select = document.getElementById('namaPegawai');
             masterPegawai.sort((a, b) => a.localeCompare(b));
@@ -1005,7 +1053,7 @@
                     dataBerkas.forEach(d => { 
                         if (d.namaPegawai === oldName) { 
                             d.namaPegawai = newName; 
-                            addOrUpdateBokRecord(d); // Push to firebase
+                            addOrUpdateBokRecord(d); 
                         } 
                     });
                     
@@ -1546,7 +1594,6 @@
             saveMasterData(); 
             saveNihilData(); 
 
-            // Sync to Firebase if connected
             if (useFirebase && currentUser) {
                 dataBerkas.forEach(d => addOrUpdateBokRecord(d));
             }
