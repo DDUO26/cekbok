@@ -702,7 +702,7 @@
                     
                     // Auto Segarkan Modal Pop Up jika admin sedang membukanya
                     if(!document.getElementById('detailPegawaiModal').classList.contains('hidden') && activeDetailPegawai.nama) {
-                        renderDetailPegawaiContent(activeDetailPegawai.nama, activeDetailPegawai.tahun);
+                        openDetailPegawai(activeDetailPegawai.nama, activeDetailPegawai.tahun);
                     }
                 },
                 (error) => console.error("Firebase Snapshot Error:", error)
@@ -1223,12 +1223,12 @@
                             const persen = Math.round((lengkap / total) * 100);
                             let bgClass = persen === 100 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/30' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/30';
 
-                            gridHtml += `<div ${!isPublicMode ? `onclick="openDetailPegawai('${safeName}', '${qTahun}')"` : ''} class="${!isPublicMode?'cursor-pointer hover:shadow-md':''} border rounded-xl flex flex-col items-center justify-start p-1.5 sm:py-2 sm:px-1 transition-all ${bgClass} min-h-[48px] sm:min-h-[60px]">
+                            gridHtml += `<div ${!isPublicMode ? `onclick="openDetailPegawai('${safeName}', '${qTahun}')"` : ''} class="${!isPublicMode?'cursor-pointer hover:shadow-md':''} border rounded-xl flex flex-col items-center justify-start py-2 px-1 transition-all ${bgClass} min-h-[48px] sm:min-h-[60px]">
                                 <span class="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase mb-1 sm:mb-1.5">${m.substring(0,3)}</span><div class="flex flex-wrap justify-center gap-1 w-full">${datesHtml}</div></div>`;
                         } else {
                             const isNihil = dataNihil.some(n => n.namaPegawai === p.nama && n.bulan === m && String(n.tahun) === String(qTahun));
                             if (isNihil) {
-                                gridHtml += `<div class="cursor-default border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center p-1.5 sm:py-2 sm:px-1 opacity-70 min-h-[48px] sm:min-h-[60px]"><span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase">${m.substring(0,3)}</span><span class="text-[8px] font-bold text-slate-400 mt-1"><i class="fas fa-minus"></i></span></div>`;
+                                gridHtml += `<div class="cursor-default border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center py-2 px-1 opacity-70 min-h-[48px] sm:min-h-[60px]"><span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase">${m.substring(0,3)}</span><span class="text-[8px] font-bold text-slate-400 mt-1"><i class="fas fa-minus"></i></span></div>`;
                             } else {
                                 gridHtml += `<div ${!isPublicMode ? `onclick="openQuickModal('', '${safeName}', '${m}', '${qTahun}')"` : ''} class="${!isPublicMode?'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800':''} border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 rounded-xl flex items-center justify-center p-1.5 opacity-60 min-h-[48px] sm:min-h-[60px] transition-colors"><span class="text-[8px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500">${m.substring(0,3)}</span></div>`;
                             }
@@ -1586,6 +1586,62 @@
             updateSelectPegawai(); 
             renderTable(); 
             Swal.fire('Sukses', 'Data dipulihkan', 'success'); 
+        }
+
+        // FUNGSI MODAL POP UP YANG SEMPAT HILANG KARENA DUPLIKASI
+        function openDetailPegawai(nama, tahun) {
+            if(!isAdmin) return; 
+            activeDetailPegawai = { nama, tahun };
+            document.getElementById('detailPegawaiName').textContent = nama; 
+            document.getElementById('detailPegawaiYear').textContent = tahun;
+            document.getElementById('detailPegawaiInitial').textContent = nama.charAt(0).toUpperCase();
+            
+            const pData = dataBerkas.filter(d => d.namaPegawai === nama && String(d.tahun) === String(tahun));
+            document.getElementById('detailTotalDana').textContent = formatRp(pData.reduce((sum, d) => sum + (Number(d.nominal) || 0), 0));
+            
+            const listContainer = document.getElementById('detailPegawaiList');
+            pData.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+            
+            if (pData.length === 0) listContainer.innerHTML = `<div class="p-8 text-center text-slate-500 font-medium">Belum ada riwayat kegiatan.</div>`;
+            else listContainer.innerHTML = pData.map(item => {
+                const isComplete = item.berkasDilengkapi.length === daftarBerkasWajib.length;
+                const missing = daftarBerkasWajib.filter(b => !item.berkasDilengkapi.includes(b));
+                return `<div class="p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between gap-4 transition-colors shadow-sm"><div><div class="flex items-center gap-2 mb-2"><span class="font-black text-slate-800 dark:text-white text-sm">${formatShortDate(item.tanggal)}</span><span class="text-[10px] font-bold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-md border border-primary-200">${item.program || 'Umum'}</span></div>
+                    ${isComplete ? `<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 uppercase"><i class="fas fa-check-circle"></i> Berkas Lengkap</span>` : `<div class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 uppercase mt-1"><i class="fas fa-times-circle"></i> Belum Lengkap. <span class="text-slate-600 normal-case ml-1">Kurang: ${missing.join(', ')}</span></div>`}
+                    ${item.nominal ? `<div class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2.5"><i class="fas fa-wallet mr-1 opacity-50"></i> Dana: ${formatRp(item.nominal)}</div>` : ''}${item.keterangan ? `<div class="text-[10px] text-amber-900 bg-amber-50 border border-amber-200 p-2 rounded-lg mt-2.5 shadow-sm"><i class="fas fa-sticky-note mr-1 opacity-70"></i> ${escJS(item.keterangan)}</div>` : ''}</div>
+                    <div class="flex sm:flex-col justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200"><button onclick="openQuickModal('${item.id}', '${escJS(nama)}', '${item.bulan}', '${tahun}')" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:border-primary-300 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-edit"></i> Edit</button><button onclick="deleteSingleData('${item.id}', true)" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-trash"></i> Hapus</button></div></div>`;
+            }).join('');
+            document.getElementById('detailPegawaiModal').classList.remove('hidden');
+        }
+
+        function closeDetailPegawai() { 
+            document.getElementById('detailPegawaiModal').classList.add('hidden'); 
+        }
+
+        function openQuickModal(id, nama, bulan, tahun) {
+            if(!isAdmin) return;
+            document.getElementById('quickId').value = id || '';
+            document.getElementById('quickNamaHidden').value = nama; 
+            document.getElementById('quickNama').textContent = nama;
+            document.getElementById('quickPeriode').textContent = `${bulan} ${tahun}`;
+            document.getElementById('quickModalTitle').innerHTML = id ? '<i class="fas fa-edit opacity-80"></i> Edit SPJ' : '<i class="fas fa-plus opacity-80"></i> Tambah SPJ Manual';
+            
+            generateCheckboxes('quickChecklistContainer', 'quickBerkas');
+            
+            let item = id ? dataBerkas.find(d => d.id === id) : null;
+            document.getElementById('quickTanggal').value = item ? item.tanggal : new Date().toISOString().split('T')[0];
+            document.getElementById('quickProgram').value = item ? (item.program || '') : '';
+            document.getElementById('quickNominal').value = item ? (item.nominal || '') : '';
+            document.getElementById('quickKeterangan').value = item ? (item.keterangan || '') : '';
+            
+            const dilengkapi = item ? item.berkasDilengkapi : [];
+            document.querySelectorAll('input[name="quickBerkas"]').forEach(cb => { 
+                cb.checked = dilengkapi.includes(cb.value); 
+                styleCheckbox(cb); 
+            });
+            document.getElementById('checkAllQuick').checked = dilengkapi.length === daftarBerkasWajib.length && id !== '';
+            
+            document.getElementById('quickModal').classList.remove('hidden');
         }
 
         function closeQuickModal() { 
