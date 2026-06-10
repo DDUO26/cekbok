@@ -375,24 +375,13 @@
                             </div>
                         </div>
 
-                        <!-- 2 Panels -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                            <!-- Panel Sudah -->
-                            <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col h-[240px] sm:h-96 print-auto-height overflow-hidden">
-                                <div class="px-4 py-2 sm:px-6 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-900/10">
-                                    <h4 class="font-extrabold text-emerald-700 dark:text-emerald-400 text-sm sm:text-lg flex items-center gap-1.5 sm:gap-2"><i class="fas fa-check-circle"></i> Sudah Masuk</h4>
-                                    <span id="countSudah" class="bg-emerald-500 text-white text-[10px] sm:text-xs font-bold w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center rounded-full shadow-sm">0</span>
-                                </div>
-                                <ul id="listSudahKumpul" class="p-2 sm:p-4 overflow-y-auto flex-1 space-y-1.5 sm:space-y-2 bg-slate-50/30 dark:bg-transparent custom-scrollbar"></ul>
+                        <!-- Panel Lengkap (1 Panel) -->
+                        <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col max-h-[400px] sm:max-h-[500px] print-auto-height overflow-hidden">
+                            <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-900/10 shrink-0">
+                                <h4 class="font-extrabold text-emerald-700 dark:text-emerald-400 text-sm sm:text-lg flex items-center gap-1.5 sm:gap-2"><i class="fas fa-check-circle"></i> Sudah Lengkap Berkas</h4>
+                                <span id="countLengkap" class="bg-emerald-500 text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full shadow-sm">0 Pegawai</span>
                             </div>
-                            <!-- Panel Belum -->
-                            <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col h-[240px] sm:h-96 print-auto-height overflow-hidden">
-                                <div class="px-4 py-2 sm:px-6 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-red-50/50 dark:bg-red-900/10">
-                                    <h4 class="font-extrabold text-red-600 dark:text-red-400 text-sm sm:text-lg flex items-center gap-1.5 sm:gap-2"><i class="fas fa-times-circle"></i> Belum Masuk</h4>
-                                    <span id="countBelum" class="bg-red-500 text-white text-[10px] sm:text-xs font-bold w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center rounded-full shadow-sm">0</span>
-                                </div>
-                                <ul id="listBelumKumpul" class="p-2 sm:p-4 overflow-y-auto flex-1 space-y-1.5 sm:space-y-2 bg-slate-50/30 dark:bg-transparent custom-scrollbar"></ul>
-                            </div>
+                            <ul id="listLengkap" class="p-3 sm:p-4 overflow-y-auto flex-1 bg-slate-50/30 dark:bg-transparent custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 content-start"></ul>
                         </div>
                     </div>
 
@@ -1307,6 +1296,11 @@
                 qTahun = years[0];
             }
 
+            const printTitleEl = document.getElementById('printReportTitle');
+            if (printTitleEl) {
+                printTitleEl.textContent = `Tahun ${qTahun}`;
+            }
+
             let filteredData = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
             
             if (filteredData.length === 0 && dataBerkas.length > 0) {
@@ -1369,7 +1363,6 @@
 
             // --- TRACKING KEPATUHAN ---
             const dBulan = dSet.filter(d => d.bulan === b);
-            const nBulan = dataNihil.filter(n => n.bulan === b && String(n.tahun) === String(y));
             
             const statusPegawai = {};
             dBulan.forEach(d => {
@@ -1377,42 +1370,22 @@
                 if (!statusPegawai[d.namaPegawai]) statusPegawai[d.namaPegawai] = isLengkap ? 'Lengkap' : 'Ada Kurang';
                 else if (!isLengkap) statusPegawai[d.namaPegawai] = 'Ada Kurang';
             });
-            nBulan.forEach(n => { if (!statusPegawai[n.namaPegawai]) statusPegawai[n.namaPegawai] = 'Nihil'; });
 
-            const arrSudah = Object.keys(statusPegawai).sort((a,b) => a.localeCompare(b));
-            const arrBelum = masterPegawai.filter(nama => !statusPegawai[nama]).sort((a,b) => a.localeCompare(b));
+            // Hanya saring yang "Lengkap"
+            const arrLengkap = Object.keys(statusPegawai).filter(n => statusPegawai[n] === 'Lengkap').sort((a,b) => a.localeCompare(b));
 
-            document.getElementById('countSudah').textContent = arrSudah.length;
-            document.getElementById('countBelum').textContent = arrBelum.length;
+            document.getElementById('countLengkap').textContent = `${arrLengkap.length} Pegawai`;
 
             const totalTarget = masterPegawai.length;
-            const progress = totalTarget > 0 ? Math.round((arrSudah.length / totalTarget) * 100) : 0;
+            const progress = totalTarget > 0 ? Math.round((arrLengkap.length / totalTarget) * 100) : 0;
             document.getElementById('progressText').textContent = `${progress}%`;
             document.getElementById('progressBar').style.width = `${progress}%`;
 
-            const listS = document.getElementById('listSudahKumpul');
-            if(arrSudah.length === 0) listS.innerHTML = '<li class="text-xs sm:text-sm text-slate-400 text-center py-4 sm:py-6">Belum ada yang menyetor.</li>';
-            else listS.innerHTML = arrSudah.map(n => {
-                if (statusPegawai[n] === 'Lengkap') {
-                    return `<li class="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center shadow-sm"><span class="font-bold text-slate-700 dark:text-slate-200 text-xs sm:text-sm truncate w-2/3">${n}</span> <span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[9px] sm:text-[10px] font-bold px-2 py-1 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg shrink-0"><i class="fas fa-check-circle mr-1"></i> LENGKAP</span></li>`;
-                } else if (statusPegawai[n] === 'Ada Kurang') {
-                    return `<li class="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl border border-amber-100 dark:border-amber-900/30 flex justify-between items-center shadow-sm"><span class="font-bold text-slate-700 dark:text-slate-200 text-xs sm:text-sm truncate w-2/3">${n}</span> <span class="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-[9px] sm:text-[10px] font-bold px-2 py-1 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg shrink-0"><i class="fas fa-exclamation-triangle mr-1"></i> REVISI</span></li>`;
-                } else {
-                    return `<li class="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center shadow-sm opacity-80 hover:opacity-100"><span class="font-bold text-slate-500 text-xs sm:text-sm truncate w-1/2">${n}</span> <div class="flex gap-1.5 sm:gap-2 items-center shrink-0"><span class="bg-slate-100 dark:bg-slate-900 text-slate-500 text-[9px] sm:text-[10px] font-bold px-2 py-1 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg"><i class="fas fa-minus-circle mr-1"></i> NIHIL</span> ${isAdmin ? `<button onclick="batalNihilByName('${escJS(n)}', '${b}', '${y}')" class="text-red-400 hover:text-red-600 px-1"><i class="fas fa-undo"></i></button>`:''}</div></li>`;
-                }
+            const listL = document.getElementById('listLengkap');
+            if(arrLengkap.length === 0) listL.innerHTML = '<div class="col-span-full text-xs sm:text-sm text-slate-400 text-center py-4 sm:py-6 w-full">Belum ada pegawai dengan berkas lengkap di bulan ini.</div>';
+            else listL.innerHTML = arrLengkap.map(n => {
+                return `<li class="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center shadow-sm"><span class="font-bold text-slate-700 dark:text-slate-200 text-xs sm:text-sm truncate mr-2">${n}</span> <span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[9px] sm:text-[10px] font-bold px-2 py-1 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg shrink-0"><i class="fas fa-check-circle mr-1"></i> LENGKAP</span></li>`;
             }).join('');
-
-            const listB = document.getElementById('listBelumKumpul');
-            if(masterPegawai.length === 0) listB.innerHTML = '<li class="text-xs sm:text-sm text-red-400 text-center py-4 sm:py-6">Master Pegawai kosong.</li>';
-            else if(arrBelum.length === 0) listB.innerHTML = '<li class="text-xs sm:text-sm text-emerald-500 text-center py-4 sm:py-6 font-bold">100% Kepatuhan! Semua sudah menyetor.</li>';
-            else listB.innerHTML = arrBelum.map(n => `
-                <li class="p-2.5 sm:p-3 bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl border border-red-100 dark:border-red-900/30 flex justify-between items-center shadow-sm group">
-                    <span class="font-bold text-red-600 dark:text-red-400 text-xs sm:text-sm truncate w-1/2 sm:w-2/3">${n}</span> 
-                    ${isAdmin ? `<div class="flex gap-1.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button onclick="tandaiNihil('${escJS(n)}', '${b}', '${y}')" class="text-[9px] sm:text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg hover:bg-slate-200 transition-colors">Nihil</button>
-                        <button onclick="openQuickModal('', '${escJS(n)}', '${b}', '${y}')" class="text-[9px] sm:text-[10px] font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-2 py-1 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg hover:bg-red-500 hover:text-white transition-colors">Input</button>
-                    </div>` : `<i class="fas fa-clock text-red-300 shrink-0"></i>`}
-                </li>`).join('');
 
             const pbBody = document.getElementById('publicDataTableBody');
             if(pbBody) {
@@ -1425,14 +1398,11 @@
             }
         }
 
-        // FUNGSI CETAK TRACKING KHUSUS (2 KOLOM RAPI)
         function printTracking() {
             const y = document.getElementById('dashFilterTahun').value;
             const b = document.getElementById('dashFilterBulan').value;
             
-            const dSet = dataBerkas.filter(d => String(d.tahun) === String(y));
-            const dBulan = dSet.filter(d => d.bulan === b);
-            const nBulan = dataNihil.filter(n => n.bulan === b && String(n.tahun) === String(y));
+            const dBulan = dataBerkas.filter(d => String(d.tahun) === String(y) && d.bulan === b);
             
             const statusPegawai = {};
             dBulan.forEach(d => {
@@ -1440,58 +1410,34 @@
                 if (!statusPegawai[d.namaPegawai]) statusPegawai[d.namaPegawai] = isLengkap ? 'Lengkap' : 'Ada Kurang';
                 else if (!isLengkap) statusPegawai[d.namaPegawai] = 'Ada Kurang';
             });
-            nBulan.forEach(n => { if (!statusPegawai[n.namaPegawai]) statusPegawai[n.namaPegawai] = 'Nihil'; });
 
-            const arrSudah = Object.keys(statusPegawai).sort((a,b) => a.localeCompare(b));
-            const arrBelum = masterPegawai.filter(nama => !statusPegawai[nama]).sort((a,b) => a.localeCompare(b));
+            const arrLengkap = Object.keys(statusPegawai).filter(n => statusPegawai[n] === 'Lengkap').sort((a,b) => a.localeCompare(b));
 
             const printHtml = `
                 <div style="text-align: center; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 2px solid #333;">
-                    <h1 style="font-size: 24px; font-weight: bold; margin:0; text-transform: uppercase;">Laporan Kepatuhan SPJ BOK</h1>
+                    <h1 style="font-size: 24px; font-weight: bold; margin:0; text-transform: uppercase;">Laporan Pegawai Lengkap SPJ BOK</h1>
                     <p style="margin: 5px 0 0 0; font-size: 14px;">Periode: ${b} ${y}</p>
                 </div>
-                <div style="display: flex; gap: 40px; width: 100%;">
-                    <div style="width: 50%;">
-                        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px 15px; margin-bottom: 15px; border-radius: 8px;">
-                            <h2 style="margin:0; color: #065f46; font-size: 16px;">☑️ Sudah Menyetor & Diperiksa</h2>
-                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #064e3b;">Total: ${arrSudah.length} Pegawai</p>
-                        </div>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                            <thead>
-                                <tr style="background: #f1f5f9;">
-                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 40px;">No</th>
-                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Nama Pegawai</th>
-                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Status Kelengkapan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${arrSudah.length === 0 ? `<tr><td colspan="3" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; font-style: italic;">Nihil</td></tr>` : 
-                                arrSudah.map((n, i) => {
-                                    let cl = statusPegawai[n] === 'Lengkap' ? '#059669' : (statusPegawai[n] === 'Ada Kurang' ? '#d97706' : '#64748b');
-                                    let tx = statusPegawai[n] === 'Nihil' ? 'Nihil (Tdk Ada Keg)' : statusPegawai[n];
-                                    return `<tr><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${n}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; color: ${cl};">${tx}</td></tr>`
-                                }).join('')}
-                            </tbody>
-                        </table>
+                <div style="width: 100%;">
+                    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px 15px; margin-bottom: 15px; border-radius: 8px;">
+                        <h2 style="margin:0; color: #065f46; font-size: 16px;">☑️ Daftar Pegawai Sudah Lengkap Berkas</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #064e3b;">Total: ${arrLengkap.length} Pegawai</p>
                     </div>
-                    <div style="width: 50%;">
-                        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 10px 15px; margin-bottom: 15px; border-radius: 8px;">
-                            <h2 style="margin:0; color: #991b1b; font-size: 16px;">❌ Belum Menyetor Berkas</h2>
-                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #7f1d1d;">Wajib Lapor - Total: ${arrBelum.length} Pegawai</p>
-                        </div>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                            <thead>
-                                <tr style="background: #f1f5f9;">
-                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 40px;">No</th>
-                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Nama Pegawai</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${arrBelum.length === 0 ? `<tr><td colspan="2" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; color: #059669; font-weight: bold;">Semua sudah melapor!</td></tr>` : 
-                                arrBelum.map((n, i) => `<tr><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #b91c1c;">${n}</td></tr>`).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 40px;">No</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Nama Pegawai</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 150px;">Status Kelengkapan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${arrLengkap.length === 0 ? `<tr><td colspan="3" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; font-style: italic;">Belum ada pegawai dengan berkas lengkap di bulan ini</td></tr>` : 
+                            arrLengkap.map((n, i) => {
+                                return `<tr><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${n}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; color: #059669;">Lengkap</td></tr>`
+                            }).join('')}
+                        </tbody>
+                    </table>
                 </div>
             `;
 
@@ -1588,32 +1534,6 @@
             Swal.fire('Sukses', 'Data dipulihkan', 'success'); 
         }
 
-        // FUNGSI MODAL POP UP YANG SEMPAT HILANG KARENA DUPLIKASI
-        function openDetailPegawai(nama, tahun) {
-            if(!isAdmin) return; 
-            activeDetailPegawai = { nama, tahun };
-            document.getElementById('detailPegawaiName').textContent = nama; 
-            document.getElementById('detailPegawaiYear').textContent = tahun;
-            document.getElementById('detailPegawaiInitial').textContent = nama.charAt(0).toUpperCase();
-            
-            const pData = dataBerkas.filter(d => d.namaPegawai === nama && String(d.tahun) === String(tahun));
-            document.getElementById('detailTotalDana').textContent = formatRp(pData.reduce((sum, d) => sum + (Number(d.nominal) || 0), 0));
-            
-            const listContainer = document.getElementById('detailPegawaiList');
-            pData.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
-            
-            if (pData.length === 0) listContainer.innerHTML = `<div class="p-8 text-center text-slate-500 font-medium">Belum ada riwayat kegiatan.</div>`;
-            else listContainer.innerHTML = pData.map(item => {
-                const isComplete = item.berkasDilengkapi.length === daftarBerkasWajib.length;
-                const missing = daftarBerkasWajib.filter(b => !item.berkasDilengkapi.includes(b));
-                return `<div class="p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between gap-4 transition-colors shadow-sm"><div><div class="flex items-center gap-2 mb-2"><span class="font-black text-slate-800 dark:text-white text-sm">${formatShortDate(item.tanggal)}</span><span class="text-[10px] font-bold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-md border border-primary-200">${item.program || 'Umum'}</span></div>
-                    ${isComplete ? `<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 uppercase"><i class="fas fa-check-circle"></i> Berkas Lengkap</span>` : `<div class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 uppercase mt-1"><i class="fas fa-times-circle"></i> Belum Lengkap. <span class="text-slate-600 normal-case ml-1">Kurang: ${missing.join(', ')}</span></div>`}
-                    ${item.nominal ? `<div class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2.5"><i class="fas fa-wallet mr-1 opacity-50"></i> Dana: ${formatRp(item.nominal)}</div>` : ''}${item.keterangan ? `<div class="text-[10px] text-amber-900 bg-amber-50 border border-amber-200 p-2 rounded-lg mt-2.5 shadow-sm"><i class="fas fa-sticky-note mr-1 opacity-70"></i> ${escJS(item.keterangan)}</div>` : ''}</div>
-                    <div class="flex sm:flex-col justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200"><button onclick="openQuickModal('${item.id}', '${escJS(nama)}', '${item.bulan}', '${tahun}')" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:border-primary-300 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-edit"></i> Edit</button><button onclick="deleteSingleData('${item.id}', true)" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-trash"></i> Hapus</button></div></div>`;
-            }).join('');
-            document.getElementById('detailPegawaiModal').classList.remove('hidden');
-        }
-
         function closeDetailPegawai() { 
             document.getElementById('detailPegawaiModal').classList.add('hidden'); 
         }
@@ -1701,6 +1621,31 @@
             Swal.fire({ icon: 'success', title: 'Tersimpan', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         }
 
+        // Deklarasikan openDetailPegawai yang hilang karena duplikasi
+        function openDetailPegawai(nama, tahun) {
+            if(!isAdmin) return; 
+            activeDetailPegawai = { nama, tahun };
+            document.getElementById('detailPegawaiName').textContent = nama; 
+            document.getElementById('detailPegawaiYear').textContent = tahun;
+            document.getElementById('detailPegawaiInitial').textContent = nama.charAt(0).toUpperCase();
+            
+            const pData = dataBerkas.filter(d => d.namaPegawai === nama && String(d.tahun) === String(tahun));
+            document.getElementById('detailTotalDana').textContent = formatRp(pData.reduce((sum, d) => sum + (Number(d.nominal) || 0), 0));
+            
+            const listContainer = document.getElementById('detailPegawaiList');
+            pData.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+            
+            if (pData.length === 0) listContainer.innerHTML = `<div class="p-8 text-center text-slate-500 font-medium">Belum ada riwayat kegiatan.</div>`;
+            else listContainer.innerHTML = pData.map(item => {
+                const isComplete = item.berkasDilengkapi.length === daftarBerkasWajib.length;
+                const missing = daftarBerkasWajib.filter(b => !item.berkasDilengkapi.includes(b));
+                return `<div class="p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between gap-4 transition-colors shadow-sm"><div><div class="flex items-center gap-2 mb-2"><span class="font-black text-slate-800 dark:text-white text-sm">${formatShortDate(item.tanggal)}</span><span class="text-[10px] font-bold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-md border border-primary-200">${item.program || 'Umum'}</span></div>
+                    ${isComplete ? `<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 uppercase"><i class="fas fa-check-circle"></i> Berkas Lengkap</span>` : `<div class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 uppercase mt-1"><i class="fas fa-times-circle"></i> Belum Lengkap. <span class="text-slate-600 normal-case ml-1">Kurang: ${missing.join(', ')}</span></div>`}
+                    ${item.nominal ? `<div class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2.5"><i class="fas fa-wallet mr-1 opacity-50"></i> Dana: ${formatRp(item.nominal)}</div>` : ''}${item.keterangan ? `<div class="text-[10px] text-amber-900 bg-amber-50 border border-amber-200 p-2 rounded-lg mt-2.5 shadow-sm"><i class="fas fa-sticky-note mr-1 opacity-70"></i> ${escJS(item.keterangan)}</div>` : ''}</div>
+                    <div class="flex sm:flex-col justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200"><button onclick="openQuickModal('${item.id}', '${escJS(nama)}', '${item.bulan}', '${tahun}')" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:border-primary-300 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-edit"></i> Edit</button><button onclick="deleteSingleData('${item.id}', true)" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-trash"></i> Hapus</button></div></div>`;
+            }).join('');
+            document.getElementById('detailPegawaiModal').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
