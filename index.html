@@ -115,7 +115,10 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white" id="greetingText">Selamat Datang!</h2>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400" id="currentDate">Memuat tanggal...</p>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        <span id="currentDate">Memuat tanggal...</span>
+                        <span id="cloudStatusBadge" class="hidden px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase tracking-wider border border-emerald-200"><i class="fas fa-cloud text-emerald-500 mr-1"></i> Online</span>
+                    </p>
                 </div>
             </div>
             
@@ -525,24 +528,264 @@
         </div>
     </div>
 
-    <!-- SCRIPT LOGIKA UTAMA -->
+    <!-- PUSAT LOGIKA & FIREBASE INTEGRASI -->
     <script>
         const daftarBerkasWajib = ['RILL', 'Surat Pernyataan', 'Surat Tugas', 'SPPD', 'Laporan', 'Foto'];
         const daftarBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        
+        // Memori State Lokal
         let dataBerkas = [];
         let masterPegawai = []; 
         let dataNihil = []; 
         let currentView = 'matrix';
         let activeDetailPegawai = { nama: null, tahun: null }; 
 
-        let chartStatusInstance = null;
-        let chartBerkasInstance = null;
+        // Variabel Firebase Global (Agar dikenali seluruh fungsi)
+        let db, fbCollection, fbDoc, fbSetDoc, fbDeleteDoc, fbOnSnapshot;
+        let appId, currentUser;
+        let useFirebase = false;
 
         let isAdmin = localStorage.getItem('soLengkapAdmin') === 'true';
 
-        // Escaper Helper: Mengamankan nama dengan tanda kutip untuk disisipkan ke HTML
+        // Helper
         const escJS = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
+        // --- INIT FIREBASE (ASYNC) ---
+        async function initFirebase() {
+            try {
+                const firebaseApp = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+                const firebaseAuth = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                const firebaseFirestore = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+
+                // 1. PASTE FIREBASE CONFIG ANDA DI SINI
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBl6KbWks1IvaH_3hklp9VRJRe1qyP-a3o",
+                    authDomain: "ceklist-5d351.firebaseapp.com",
+                    projectId: "ceklist-5d351",
+                    storageBucket: "ceklist-5d351.firebasestorage.app",
+                    messagingSenderId: "672142598008",
+                    appId: "1:672142598008:web:89c031427292593ef3f28d",
+                    measurementId: "G-XF9W5ZKSVK"
+                };
+
+                const app = firebaseApp.initializeApp(firebaseConfig);
+                const auth = firebaseAuth.getAuth(app);
+                db = firebaseFirestore.getFirestore(app);
+                
+                fbCollection = firebaseFirestore.collection;
+                fbDoc = firebaseFirestore.doc;
+                fbSetDoc = firebaseFirestore.setDoc;
+                fbDeleteDoc = firebaseFirestore.deleteDoc;
+                fbOnSnapshot = firebaseFirestore.onSnapshot;
+
+                // 2. GANTI DENGAN NAMA PUSKESMAS ANDA (Tanpa spasi, gunakan tanda strip)
+                appId = 'ceklist-puskesmas-v1';
+
+                // Login secara anonim ke Firebase
+                await firebaseAuth.signInAnonymously(auth);
+
+                currentUser = auth.currentUser;
+                useFirebase = true;
+                return true;
+            } catch (error) {
+                console.error("Koneksi Firebase Gagal:", error);
+                return false;
+            }
+        }
+
+        // --- EVENT LISTENER SAAT HALAMAN DIMUAT ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (localStorage.getItem('soLengkapTheme') === 'dark') document.documentElement.classList.add('dark');
+            
+            const today = new Date();
+            document.getElementById('tanggal').valueAsDate = today;
+            document.getElementById('dashFilterBulan').value = daftarBulan[today.getMonth()];
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = today.toLocaleDateString('id-ID', options);
+
+            let greeting = 'Selamat Pagi!';
+            const hour = today.getHours();
+            if(hour >= 12 && hour < 15) greeting = 'Selamat Siang!';
+            else if(hour >= 15 && hour < 18) greeting = 'Selamat Sore!';
+            else if(hour >= 18) greeting = 'Selamat Malam!';
+            document.getElementById('greetingText').textContent = greeting;
+
+            generateCheckboxes('mainChecklistContainer', 'berkas');
+            
+            // 1. Load Data Dari LocalStorage Dahulu Agar Tampilan Cepat Muncul
+            loadDataLocal();
+            updateFilterTahunOptions();
+            updateDashFilterTahun();
+            applyRoleState(); // Otomatis merender tabel / dashboard
+            
+            // 2. Hubungkan event listener Form HTML (Wajib sebelum Firebase mereplace data)
+            document.getElementById('checklistForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('quickForm').addEventListener('submit', handleQuickSubmit);
+            document.getElementById('formMasterPegawai').addEventListener('submit', handleAddMasterPegawai);
+            ['searchInput', 'filterTahun'].forEach(id => { document.getElementById(id).addEventListener('input', renderTable); });
+
+            // 3. Aktivasi Firebase di Latar Belakang
+            const fbReady = await initFirebase();
+            if (fbReady) {
+                document.getElementById('cloudStatusBadge').classList.remove('hidden'); // Munculkan icon online
+                
+                // Mendorong data lokal lama ke Firebase sekali saja
+                await migrateLocalToFirebase(); 
+                
+                // Menyalakan radar "Mendengarkan Perubahan Data Cloud Real-time"
+                setupRealtimeListeners();
+            }
+        });
+
+        // --- SISTEM FIREBASE SYNC KUSTOM ---
+
+        async function migrateLocalToFirebase() {
+            if (!useFirebase || !currentUser) return;
+            const migratedFlag = localStorage.getItem('fb_migrated_v2_2');
+            if (!migratedFlag) {
+                // Dorong semua array yang ada di localstorage saat ini ke Firebase
+                if (dataBerkas.length > 0) {
+                    dataBerkas.forEach(d => addOrUpdateBokRecord(d));
+                }
+                if (masterPegawai.length > 0) saveMasterData();
+                if (dataNihil.length > 0) saveNihilData();
+                
+                localStorage.setItem('fb_migrated_v2_2', 'true');
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!useFirebase || !currentUser) return;
+            
+            // Listener 1: Seluruh Data BOK
+            fbOnSnapshot(
+                fbCollection(db, 'artifacts', appId, 'public', 'data', 'bokData'),
+                (snapshot) => {
+                    dataBerkas = [];
+                    snapshot.forEach(d => dataBerkas.push(d.data()));
+                    updateFilterTahunOptions();
+                    updateDashFilterTahun();
+                    
+                    // Segarkan Visual setelah menerima paketan data baru
+                    renderTable();
+                    renderDashboard();
+                    
+                    // Auto Segarkan Modal Pop Up jika admin sedang membukanya
+                    if(!document.getElementById('detailPegawaiModal').classList.contains('hidden') && activeDetailPegawai.nama) {
+                        renderDetailPegawaiContent(activeDetailPegawai.nama, activeDetailPegawai.tahun);
+                    }
+                },
+                (error) => console.error("Firebase Snapshot Error:", error)
+            );
+
+            // Listener 2: Data Master Pegawai
+            fbOnSnapshot(
+                fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'),
+                (docSnap) => {
+                    if (docSnap.exists()) {
+                        masterPegawai = docSnap.data().names || [];
+                        updateSelectPegawai();
+                        renderMasterPegawai();
+                        renderDashboard();
+                    }
+                },
+                (error) => console.error("Firebase Master Error:", error)
+            );
+
+            // Listener 3: Data Daftar Nihil Kegiatan
+            fbOnSnapshot(
+                fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'),
+                (docSnap) => {
+                    if (docSnap.exists()) {
+                        dataNihil = docSnap.data().records || [];
+                        renderDashboard();
+                    }
+                },
+                (error) => console.error("Firebase Nihil Error:", error)
+            );
+        }
+
+        // --- SISTEM CRUD (MEMBUAT, BACA, UBAH, HAPUS) DATA ---
+        
+        function addOrUpdateBokRecord(record) {
+            if(useFirebase && currentUser) {
+                fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record);
+            }
+            saveDataLocal(); // Optimistic save ke local
+        }
+
+        function deleteBokRecord(id) {
+            if(useFirebase && currentUser) {
+                fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', id));
+            }
+            saveDataLocal();
+        }
+
+        function clearAllBokRecords() {
+            if(useFirebase && currentUser) {
+                dataBerkas.forEach(d => {
+                    fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id));
+                });
+            }
+            saveDataLocal();
+        }
+
+        function saveMasterData() { 
+            localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai)); 
+            if(useFirebase && currentUser) {
+                fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), { names: masterPegawai });
+            }
+        }
+        
+        function saveNihilData() { 
+            localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); 
+            if(useFirebase && currentUser) {
+                fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), { records: dataNihil });
+            }
+        }
+
+        function saveDataLocal() { 
+            localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas)); 
+        }
+
+        function loadDataLocal() {
+            const savedMaster = localStorage.getItem('bokMasterPegawai'); if(savedMaster) { try { masterPegawai = JSON.parse(savedMaster); } catch(e){} }
+            const nihilStr = localStorage.getItem('bokNihilV2'); if (nihilStr) { try { dataNihil = JSON.parse(nihilStr); } catch(e){} }
+
+            const v1Str = localStorage.getItem('bokChecklistData'); const v2Str = localStorage.getItem('bokChecklistV2');
+            let v1Data = []; let v2Data = [];
+            if (v1Str) { try { v1Data = JSON.parse(v1Str); } catch(e){} }
+            if (v2Str) { try { v2Data = JSON.parse(v2Str); } catch(e){} }
+
+            if (v1Data.length > 0) {
+                const existingV2Ids = new Set(v2Data.map(d => d.id)); let hasMig = false;
+                v1Data.forEach(d => {
+                    const id = d.id || ('BOK_old_' + Math.random().toString(36).substr(2,9));
+                    if (!existingV2Ids.has(id)) {
+                        let yStr = d.tahun ? String(d.tahun) : new Date(d.tanggal).getFullYear().toString();
+                        v2Data.push({ id, namaPegawai: d.namaPegawai, tanggal: d.tanggal, bulan: d.bulan, tahun: yStr, program: 'Umum', nominal: 0, berkasDilengkapi: d.berkasDilengkapi || [], keterangan: d.keterangan || '', timestamp: d.timestamp });
+                        hasMig = true;
+                    }
+                });
+                if (hasMig) localStorage.setItem('bokChecklistV2', JSON.stringify(v2Data));
+            }
+            dataBerkas = v2Data;
+
+            if (dataBerkas.length > 0) {
+                let masterUpdated = false;
+                const existingMasterLower = new Set(masterPegawai.map(m => m.toLowerCase()));
+                dataBerkas.forEach(d => {
+                    if (d.namaPegawai && !existingMasterLower.has(d.namaPegawai.toLowerCase())) {
+                        masterPegawai.push(d.namaPegawai); existingMasterLower.add(d.namaPegawai.toLowerCase()); masterUpdated = true;
+                    }
+                });
+                if (masterUpdated) saveMasterData();
+            }
+            updateSelectPegawai();
+        }
+
+        // --- SISTEM ADMIN & TEMA ---
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -571,13 +814,10 @@
                     const confP = Swal.getPopup().querySelector('#confPwd').value;
                     const currentPwd = localStorage.getItem('soLengkapPwd') || 'admin';
 
-                    if (!oldP || !newP || !confP) {
-                        Swal.showValidationMessage(`Harap isi semua kolom`);
-                    } else if (oldP !== currentPwd) {
-                        Swal.showValidationMessage(`Sandi lama salah`);
-                    } else if (newP !== confP) {
-                        Swal.showValidationMessage(`Sandi baru dan konfirmasi tidak cocok`);
-                    }
+                    if (!oldP || !newP || !confP) Swal.showValidationMessage(`Harap isi semua kolom`);
+                    else if (oldP !== currentPwd) Swal.showValidationMessage(`Sandi lama salah`);
+                    else if (newP !== confP) Swal.showValidationMessage(`Sandi baru dan konfirmasi tidak cocok`);
+                    
                     return newP;
                 }
             }).then((result) => {
@@ -627,36 +867,6 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('soLengkapTheme') === 'dark') document.documentElement.classList.add('dark');
-            
-            const today = new Date();
-            document.getElementById('tanggal').valueAsDate = today;
-            document.getElementById('dashFilterBulan').value = daftarBulan[today.getMonth()];
-            
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = today.toLocaleDateString('id-ID', options);
-
-            let greeting = 'Selamat Pagi!';
-            const hour = today.getHours();
-            if(hour >= 12 && hour < 15) greeting = 'Selamat Siang!';
-            else if(hour >= 15 && hour < 18) greeting = 'Selamat Sore!';
-            else if(hour >= 18) greeting = 'Selamat Malam!';
-            document.getElementById('greetingText').textContent = greeting;
-
-            generateCheckboxes('mainChecklistContainer', 'berkas');
-            
-            loadData();
-            updateFilterTahunOptions();
-            updateDashFilterTahun();
-            applyRoleState();
-            
-            document.getElementById('checklistForm').addEventListener('submit', handleFormSubmit);
-            document.getElementById('quickForm').addEventListener('submit', handleQuickSubmit);
-            document.getElementById('formMasterPegawai').addEventListener('submit', handleAddMasterPegawai);
-            ['searchInput', 'filterTahun'].forEach(id => { document.getElementById(id).addEventListener('input', renderTable); });
-        });
-
         function switchTab(tabId) {
             if(!isAdmin && tabId !== 'dashboard') {
                 Swal.fire('Akses Dibatasi', 'Anda harus login sebagai Admin untuk mengakses menu ini.', 'warning');
@@ -699,6 +909,7 @@
             }
         }
 
+        // Helper Tambahan
         const formatRp = (angka) => 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
         const formatShortDate = (dString) => {
             if(!dString) return ''; const d = new Date(dString);
@@ -744,6 +955,7 @@
             renderTable();
         }
 
+        // --- MASTER DATA PEGAWAI LOGIC ---
         function updateSelectPegawai() {
             const select = document.getElementById('namaPegawai');
             masterPegawai.sort((a, b) => a.localeCompare(b));
@@ -760,13 +972,21 @@
             
             if (masterPegawai.some(m => m.toLowerCase() === nama.toLowerCase())) return Swal.fire('Info', 'Nama ini sudah ada di Master Data.', 'info');
             masterPegawai.push(nama); input.value = '';
-            saveMasterData(); updateSelectPegawai(); renderMasterPegawai();
+            
+            saveMasterData(); 
+            updateSelectPegawai(); 
+            renderMasterPegawai();
             Swal.fire({icon: 'success', title: 'Tersimpan', toast: true, position: 'top-end', timer: 1000, showConfirmButton: false});
         }
 
         function hapusMasterPegawai(nama) {
             Swal.fire({ title: `Hapus ${nama}?`, text: 'Dihapus dari Master Data.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus' }).then(res => {
-                if(res.isConfirmed) { masterPegawai = masterPegawai.filter(m => m !== nama); saveMasterData(); updateSelectPegawai(); renderMasterPegawai(); }
+                if(res.isConfirmed) { 
+                    masterPegawai = masterPegawai.filter(m => m !== nama); 
+                    saveMasterData(); 
+                    updateSelectPegawai(); 
+                    renderMasterPegawai(); 
+                }
             });
         }
 
@@ -781,12 +1001,26 @@
                     if (masterPegawai.some(m => m.toLowerCase() === newName.toLowerCase())) return Swal.fire('Info', 'Nama sudah ada.', 'info');
 
                     const idx = masterPegawai.indexOf(oldName); if (idx !== -1) masterPegawai[idx] = newName;
-                    let dataChanged = false;
-                    dataBerkas.forEach(d => { if (d.namaPegawai === oldName) { d.namaPegawai = newName; dataChanged = true; } });
-                    dataNihil.forEach(n => { if (n.namaPegawai === oldName) n.namaPegawai = newName; });
+                    
+                    dataBerkas.forEach(d => { 
+                        if (d.namaPegawai === oldName) { 
+                            d.namaPegawai = newName; 
+                            addOrUpdateBokRecord(d); // Push to firebase
+                        } 
+                    });
+                    
+                    dataNihil.forEach(n => { 
+                        if (n.namaPegawai === oldName) n.namaPegawai = newName; 
+                    });
 
-                    saveMasterData(); saveNihilData(); updateSelectPegawai(); renderMasterPegawai();
-                    if (dataChanged) { saveData(); renderTable(); }
+                    saveMasterData(); 
+                    saveNihilData(); 
+                    
+                    // Render Visual
+                    updateSelectPegawai(); 
+                    renderMasterPegawai();
+                    renderTable();
+                    
                     Swal.fire({icon: 'success', title: 'Diperbarui', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false});
                 }
             });
@@ -815,8 +1049,6 @@
                 </li>`).join('');
         }
 
-        function saveMasterData() { localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai)); }
-
         // --- NIHIL KEGIATAN LOGIC ---
         function tandaiNihil(nama, bulan, tahun) {
             Swal.fire({
@@ -835,7 +1067,6 @@
             dataNihil = dataNihil.filter(n => !(n.namaPegawai === nama && n.bulan === bulan && String(n.tahun) === String(tahun)));
             saveNihilData(); renderDashboard();
         }
-        function saveNihilData() { localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); }
 
         // --- SUBMIT FORM & TABLE ---
         function handleFormSubmit(e) {
@@ -848,10 +1079,14 @@
             if (dataBerkas.some(d => d.namaPegawai === namaPegawai && d.tanggal === tanggalVal && d.program === program)) return Swal.fire('Ganda!', 'Data sudah ada.', 'warning');
             const berkasDilengkapi = Array.from(document.querySelectorAll('input[name="berkas"]:checked')).map(cb => cb.value);
 
-            dataBerkas.push({ id: 'BOK_' + Date.now().toString(36), namaPegawai, tanggal: tanggalVal, bulan, tahun, program, nominal, berkasDilengkapi, keterangan, timestamp: new Date().toISOString() });
+            const newRecord = { id: 'BOK_' + Date.now().toString(36), namaPegawai, tanggal: tanggalVal, bulan, tahun, program, nominal, berkasDilengkapi, keterangan, timestamp: new Date().toISOString() };
+            dataBerkas.push(newRecord);
+            addOrUpdateBokRecord(newRecord);
+
             dataNihil = dataNihil.filter(n => !(n.namaPegawai === namaPegawai && n.bulan === bulan && String(n.tahun) === tahun));
+            saveNihilData(); 
             
-            saveNihilData(); saveData(); updateFilterTahunOptions(); updateSelectPegawai();
+            updateFilterTahunOptions(); updateSelectPegawai();
             if(document.getElementById('filterTahun').value !== tahun) document.getElementById('filterTahun').value = tahun;
 
             if (document.getElementById('retainForm').checked) {
@@ -875,7 +1110,6 @@
             const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a);
             
             if (years.length === 0) years.push(new Date().getFullYear().toString());
-            
             filterSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
             
             if (!currentVal || !years.includes(currentVal)) {
@@ -890,7 +1124,6 @@
             const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a);
             
             if (years.length === 0) years.push(new Date().getFullYear().toString());
-            
             filterDash.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
             
             if (!currentVal || !years.includes(currentVal)) {
@@ -1037,7 +1270,6 @@
                 qTahun = years[0];
             }
 
-            // PERBAIKAN: Cek dulu apakah elemennya ada sebelum diubah agar tidak crash
             const printTitleEl = document.getElementById('printReportTitle');
             if (printTitleEl) {
                 printTitleEl.textContent = `Tahun ${qTahun}`;
@@ -1045,7 +1277,6 @@
 
             let filteredData = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
             
-            // Fallback agresif jika masih kosong tapi data ada
             if (filteredData.length === 0 && dataBerkas.length > 0) {
                 qTahun = dataBerkas[dataBerkas.length-1].tahun;
                 document.getElementById('filterTahun').value = qTahun;
@@ -1240,14 +1471,26 @@
         // --- EXPORT & DB ---
         function deleteSingleData(id, isFromModal = false) {
             Swal.fire({ title: 'Hapus Rekapan?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Hapus' }).then(res => {
-                if(res.isConfirmed) { dataBerkas = dataBerkas.filter(d => d.id !== id); saveData(); renderTable(); if(isFromModal && activeDetailPegawai.nama) openDetailPegawai(activeDetailPegawai.nama, activeDetailPegawai.tahun); Swal.fire({ icon: 'success', title: 'Terhapus', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); }
+                if(res.isConfirmed) { 
+                    dataBerkas = dataBerkas.filter(d => d.id !== id); 
+                    deleteBokRecord(id);
+                    renderTable(); 
+                    if(isFromModal && activeDetailPegawai.nama) openDetailPegawai(activeDetailPegawai.nama, activeDetailPegawai.tahun); 
+                    Swal.fire({ icon: 'success', title: 'Terhapus', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false }); 
+                }
             });
         }
 
         function clearAllData() {
             if (dataBerkas.length === 0 && dataNihil.length === 0) return;
             Swal.fire({ title: 'KOSONGKAN REKAP?', text: "Semua riwayat BOK akan hilang! (Master Pegawai aman)", icon: 'error', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Hapus Semua' }).then(res => {
-                if (res.isConfirmed) { dataBerkas = []; dataNihil = []; saveData(); saveNihilData(); resetForm(); updateFilterTahunOptions(); renderTable(); Swal.fire('Dikosongkan!', 'Database bersih.', 'success'); }
+                if (res.isConfirmed) { 
+                    clearAllBokRecords();
+                    dataBerkas = []; dataNihil = []; 
+                    saveDataLocal(); saveNihilData(); 
+                    resetForm(); updateFilterTahunOptions(); renderTable(); 
+                    Swal.fire('Dikosongkan!', 'Database bersih.', 'success'); 
+                }
             });
         }
 
@@ -1297,86 +1540,26 @@
             };
             reader.readAsText(file); event.target.value = '';
         }
-        function finishRestore() { saveData(); saveMasterData(); saveNihilData(); updateFilterTahunOptions(); updateSelectPegawai(); renderTable(); Swal.fire('Sukses', 'Data dipulihkan', 'success'); }
 
-        function saveData() { localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas)); }
-        function loadData() {
-            const savedMaster = localStorage.getItem('bokMasterPegawai'); if(savedMaster) { try { masterPegawai = JSON.parse(savedMaster); } catch(e){} }
-            const nihilStr = localStorage.getItem('bokNihilV2'); if (nihilStr) { try { dataNihil = JSON.parse(nihilStr); } catch(e){} }
+        function finishRestore() { 
+            saveDataLocal(); 
+            saveMasterData(); 
+            saveNihilData(); 
 
-            const v1Str = localStorage.getItem('bokChecklistData'); const v2Str = localStorage.getItem('bokChecklistV2');
-            let v1Data = []; let v2Data = [];
-            if (v1Str) { try { v1Data = JSON.parse(v1Str); } catch(e){} }
-            if (v2Str) { try { v2Data = JSON.parse(v2Str); } catch(e){} }
-
-            if (v1Data.length > 0) {
-                const existingV2Ids = new Set(v2Data.map(d => d.id)); let hasMig = false;
-                v1Data.forEach(d => {
-                    const id = d.id || ('BOK_old_' + Math.random().toString(36).substr(2,9));
-                    if (!existingV2Ids.has(id)) {
-                        let yStr = d.tahun ? String(d.tahun) : new Date(d.tanggal).getFullYear().toString();
-                        v2Data.push({ id, namaPegawai: d.namaPegawai, tanggal: d.tanggal, bulan: d.bulan, tahun: yStr, program: 'Umum', nominal: 0, berkasDilengkapi: d.berkasDilengkapi || [], keterangan: d.keterangan || '', timestamp: d.timestamp });
-                        hasMig = true;
-                    }
-                });
-                if (hasMig) localStorage.setItem('bokChecklistV2', JSON.stringify(v2Data));
+            // Sync to Firebase if connected
+            if (useFirebase && currentUser) {
+                dataBerkas.forEach(d => addOrUpdateBokRecord(d));
             }
-            dataBerkas = v2Data;
 
-            if (dataBerkas.length > 0) {
-                let masterUpdated = false;
-                const existingMasterLower = new Set(masterPegawai.map(m => m.toLowerCase()));
-                dataBerkas.forEach(d => {
-                    if (d.namaPegawai && !existingMasterLower.has(d.namaPegawai.toLowerCase())) {
-                        masterPegawai.push(d.namaPegawai); existingMasterLower.add(d.namaPegawai.toLowerCase()); masterUpdated = true;
-                    }
-                });
-                if (masterUpdated) saveMasterData();
-            }
-            updateSelectPegawai();
+            updateFilterTahunOptions(); 
+            updateSelectPegawai(); 
+            renderTable(); 
+            Swal.fire('Sukses', 'Data dipulihkan', 'success'); 
         }
 
-        function openDetailPegawai(nama, tahun) {
-            if(!isAdmin) return; 
-            activeDetailPegawai = { nama, tahun };
-            document.getElementById('detailPegawaiName').textContent = nama; document.getElementById('detailPegawaiYear').textContent = tahun;
-            document.getElementById('detailPegawaiInitial').textContent = nama.charAt(0).toUpperCase();
-            const pData = dataBerkas.filter(d => d.namaPegawai === nama && String(d.tahun) === String(tahun));
-            document.getElementById('detailTotalDana').textContent = formatRp(pData.reduce((sum, d) => sum + (Number(d.nominal) || 0), 0));
-            const listContainer = document.getElementById('detailPegawaiList');
-            pData.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
-            
-            if (pData.length === 0) listContainer.innerHTML = `<div class="p-8 text-center text-slate-500 font-medium">Belum ada riwayat kegiatan.</div>`;
-            else listContainer.innerHTML = pData.map(item => {
-                const isComplete = item.berkasDilengkapi.length === daftarBerkasWajib.length;
-                const missing = daftarBerkasWajib.filter(b => !item.berkasDilengkapi.includes(b));
-                return `<div class="p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between gap-4 transition-colors shadow-sm"><div><div class="flex items-center gap-2 mb-2"><span class="font-black text-slate-800 dark:text-white text-sm">${formatShortDate(item.tanggal)}</span><span class="text-[10px] font-bold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-md border border-primary-200">${item.program || 'Umum'}</span></div>
-                    ${isComplete ? `<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 uppercase"><i class="fas fa-check-circle"></i> Berkas Lengkap</span>` : `<div class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 uppercase mt-1"><i class="fas fa-times-circle"></i> Belum Lengkap. <span class="text-slate-600 normal-case ml-1">Kurang: ${missing.join(', ')}</span></div>`}
-                    ${item.nominal ? `<div class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-2.5"><i class="fas fa-wallet mr-1 opacity-50"></i> Dana: ${formatRp(item.nominal)}</div>` : ''}${item.keterangan ? `<div class="text-[10px] text-amber-900 bg-amber-50 border border-amber-200 p-2 rounded-lg mt-2.5 shadow-sm"><i class="fas fa-sticky-note mr-1 opacity-70"></i> ${escJS(item.keterangan)}</div>` : ''}</div>
-                    <div class="flex sm:flex-col justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200"><button onclick="openQuickModal('${item.id}', '${escJS(nama)}', '${item.bulan}', '${tahun}')" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:border-primary-300 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-edit"></i> Edit</button><button onclick="deleteSingleData('${item.id}', true)" class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm w-full sm:w-auto"><i class="fas fa-trash"></i> Hapus</button></div></div>`;
-            }).join('');
-            document.getElementById('detailPegawaiModal').classList.remove('hidden');
+        function closeQuickModal() { 
+            document.getElementById('quickModal').classList.add('hidden'); 
         }
-        function closeDetailPegawai() { document.getElementById('detailPegawaiModal').classList.add('hidden'); }
-
-        function openQuickModal(id, nama, bulan, tahun) {
-            if(!isAdmin) return;
-            document.getElementById('quickId').value = id || '';
-            document.getElementById('quickNamaHidden').value = nama; document.getElementById('quickNama').textContent = nama;
-            document.getElementById('quickPeriode').textContent = `${bulan} ${tahun}`;
-            document.getElementById('quickModalTitle').innerHTML = id ? '<i class="fas fa-edit opacity-80"></i> Edit SPJ' : '<i class="fas fa-plus opacity-80"></i> Tambah SPJ Manual';
-            generateCheckboxes('quickChecklistContainer', 'quickBerkas');
-            let item = id ? dataBerkas.find(d => d.id === id) : null;
-            document.getElementById('quickTanggal').value = item ? item.tanggal : new Date().toISOString().split('T')[0];
-            document.getElementById('quickProgram').value = item ? (item.program || '') : '';
-            document.getElementById('quickNominal').value = item ? (item.nominal || '') : '';
-            document.getElementById('quickKeterangan').value = item ? (item.keterangan || '') : '';
-            const dilengkapi = item ? item.berkasDilengkapi : [];
-            document.querySelectorAll('input[name="quickBerkas"]').forEach(cb => { cb.checked = dilengkapi.includes(cb.value); styleCheckbox(cb); });
-            document.getElementById('checkAllQuick').checked = dilengkapi.length === daftarBerkasWajib.length && id !== '';
-            document.getElementById('quickModal').classList.remove('hidden');
-        }
-        function closeQuickModal() { document.getElementById('quickModal').classList.add('hidden'); }
 
         function handleQuickSubmit(e) {
             e.preventDefault();
@@ -1393,36 +1576,44 @@
             const mInput = daftarBulan[dInput.getMonth()];
             if (mInput !== bulan && id === '') return Swal.fire('Tanggal Tidak Sesuai', `Input untuk bulan ${bulan}, tapi tanggalnya bulan ${mInput}.`, 'error');
 
+            let updatedRecord = null;
             if (id) {
                 const idx = dataBerkas.findIndex(d => d.id === id);
                 if (idx > -1) {
                     dataBerkas[idx].tanggal = tanggal;
-                    dataBerkas[idx].bulan = daftarBulan[new Date(tanggal).getMonth()];
+                    dataBerkas[idx].bulan = daftarBulan[new Date(tanggal).getMonth()]; 
                     dataBerkas[idx].tahun = new Date(tanggal).getFullYear().toString();
                     dataBerkas[idx].program = program;
                     dataBerkas[idx].nominal = nominal;
                     dataBerkas[idx].berkasDilengkapi = berkasDilengkapi;
                     dataBerkas[idx].keterangan = keterangan;
+                    updatedRecord = dataBerkas[idx];
                 }
             } else {
-                dataBerkas.push({
+                updatedRecord = {
                     id: 'BOK_' + Date.now().toString(36) + Math.random().toString(36).substr(2,3),
                     namaPegawai: nama, tanggal, bulan: mInput, tahun: dInput.getFullYear().toString(),
                     program, nominal, berkasDilengkapi, keterangan, timestamp: new Date().toISOString()
-                });
+                };
+                dataBerkas.push(updatedRecord);
+            }
+            
+            if (updatedRecord) {
+                addOrUpdateBokRecord(updatedRecord);
             }
 
             dataNihil = dataNihil.filter(n => !(n.namaPegawai === nama && n.bulan === mInput && String(n.tahun) === dInput.getFullYear().toString()));
             saveNihilData();
 
-            saveData();
             updateFilterTahunOptions();
             renderTable();
             closeQuickModal();
-            if (!document.getElementById('detailPegawaiModal').classList.contains('hidden')) openDetailPegawai(nama, document.getElementById('filterTahun').value);
+            if (!document.getElementById('detailPegawaiModal').classList.contains('hidden')) {
+                openDetailPegawai(nama, document.getElementById('filterTahun').value);
+            }
             Swal.fire({ icon: 'success', title: 'Tersimpan', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         }
-        
+
     </script>
 </body>
 </html>
