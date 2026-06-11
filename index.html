@@ -20,10 +20,6 @@
                         primary: { 50: '#F0FDF4', 100: '#CCFBF1', 500: '#14B8A6', 600: '#0D9488', 700: '#0F766E', 800: '#115E59', 900: '#134E4A' },
                         accent: { 500: '#3B82F6', 600: '#2563EB' },
                         slate: { 850: '#151e2e' }
-                    },
-                    boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
                     }
                 }
             }
@@ -43,17 +39,22 @@
         .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .dark .glass-panel { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.05); }
 
-        /* Form Floating Labels Override */
         .input-floating:focus + label, .input-floating:not(:placeholder-shown) + label { transform: translateY(-130%) scale(0.85); color: #0F766E; font-weight: 600; }
         .dark .input-floating:focus + label { color: #14B8A6; }
 
+        /* PERBAIKAN CSS PRINT UNTUK MENCEGAH TERPOTONG & BLANK */
         @media print {
             @page { size: landscape; margin: 10mm; }
-            body { background-color: white !important; }
+            body, html { height: auto !important; overflow: visible !important; background-color: white !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: black !important; }
             .print\:hidden { display: none !important; }
-            body.printing-tracking > div { display: none !important; }
-            body.printing-tracking #printTrackingArea { display: block !important; }
+            body.printing-tracking > :not(#printTrackingArea) { display: none !important; }
+            body.printing-tracking #printTrackingArea { 
+                display: block !important; 
+                position: static !important; 
+                height: auto !important;
+                overflow: visible !important;
+            }
         }
     </style>
 </head>
@@ -113,11 +114,9 @@
         <!-- TOPBAR -->
         <header class="h-16 sm:h-20 glass-panel z-20 flex justify-between items-center px-4 sm:px-6 print:hidden shrink-0 border-b border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-3 sm:gap-4">
-                <!-- Tombol Menu HP (Hanya Admin) -->
                 <button onclick="toggleSidebar()" class="admin-only hidden md:hidden bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 w-9 h-9 rounded-xl flex items-center justify-center shadow-sm hover:bg-primary-200 transition-colors shrink-0">
                     <i class="fas fa-bars"></i>
                 </button>
-                <!-- Ikon Kotak untuk Publik / Admin di Desktop -->
                 <div class="hidden md:flex bg-gradient-to-br from-primary-500 to-primary-700 text-white w-9 h-9 rounded-lg items-center justify-center shadow-md shrink-0">
                     <i class="fas fa-check-double"></i>
                 </div>
@@ -149,18 +148,15 @@
             </div>
         </header>
 
-        <!-- Datalist Program -->
         <datalist id="listProgramDef">
             <option value="Promkes"><option value="KIA-KB"><option value="Gizi / Stunting"><option value="Kesling"><option value="P2P (Penyakit)"><option value="Manajemen / Mutu"><option value="Posyandu Lansia"><option value="Kunjungan Rumah Risti">
         </datalist>
 
-        <!-- AREA KONTEN -->
         <div class="flex-1 overflow-hidden relative">
 
-            <!-- TAB 1: KELOLA DATA & REKAP (Admin Only) -->
+            <!-- TAB 1: KELOLA DATA & REKAP -->
             <main id="tabData" class="hidden absolute inset-0 overflow-y-auto p-4 sm:p-8 flex-col xl:flex-row gap-6 admin-only fade-in">
                 
-                <!-- Kiri: Input Wizard -->
                 <div class="w-full xl:w-[400px] shrink-0 space-y-6">
                     <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden">
                         <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-850">
@@ -297,11 +293,10 @@
                 </div>
             </main>
 
-            <!-- TAB 2: DASHBOARD & TRACKING (Public / Default) -->
+            <!-- TAB 2: DASHBOARD & TRACKING -->
             <main id="tabDashboard" class="hidden absolute inset-0 overflow-y-auto p-4 sm:p-8 fade-in">
                 <div class="max-w-[1600px] mx-auto">
                     
-                    <!-- Header Dashboard -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-5 sm:mb-8 tracking-print-hide">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-white">Dashboard Monitoring BOK</h2>
@@ -313,7 +308,6 @@
                         </div>
                     </div>
 
-                    <!-- Summary Cards Premium (Diperkecil pada layar HP) -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-5 sm:mb-8 tracking-print-hide">
                         <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-soft border border-slate-200 dark:border-slate-800 relative overflow-hidden group hover:-translate-y-1 transition-all">
                             <div class="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-primary-500/10 rounded-bl-full -mr-2 -mt-2 sm:-mr-4 sm:-mt-4 transition-transform group-hover:scale-110"></div>
@@ -341,10 +335,9 @@
                         </div>
                     </div>
 
-                    <!-- Elemen Canvas Wajib ada agar JS lama tidak error (Disembunyikan) -->
                     <div style="display: none;" aria-hidden="true"><canvas id="chartStatus"></canvas><canvas id="chartBerkas"></canvas></div>
 
-                    <!-- MONITORING KEPATUHAN BOARD (Modern Redesign) -->
+                    <!-- MONITORING KEPATUHAN BOARD -->
                     <div id="trackingContainer" class="mb-6 sm:mb-8">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-3 sm:gap-4 tracking-print-hide">
                             <div>
@@ -359,15 +352,14 @@
                                     <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
                                 </select>
                                 <button onclick="printTracking()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all shadow-md text-[10px] sm:text-sm font-bold flex items-center gap-1 sm:gap-2 shrink-0">
-                                    <i class="fas fa-print"></i> Cetak
+                                    <i class="fas fa-print"></i> Cetak Semua Bulan
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Progress Bar Kepatuhan -->
                         <div class="bg-white dark:bg-slate-850 p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 mb-4 sm:mb-6 tracking-print-hide">
                             <div class="flex justify-between items-end mb-1.5 sm:mb-2">
-                                <span class="text-[9px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tingkat Kepatuhan</span>
+                                <span class="text-[9px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tingkat Kepatuhan (Satu Bulan)</span>
                                 <span class="text-base sm:text-xl font-black text-primary-600 dark:text-primary-400" id="progressText">0%</span>
                             </div>
                             <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 sm:h-3 rounded-full overflow-hidden">
@@ -375,17 +367,16 @@
                             </div>
                         </div>
 
-                        <!-- Panel Lengkap (1 Panel) -->
-                        <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col max-h-[400px] sm:max-h-[500px] print-auto-height overflow-hidden">
+                        <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 flex flex-col max-h-[400px] sm:max-h-[500px] overflow-hidden tracking-print-hide">
                             <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-900/10 shrink-0">
-                                <h4 class="font-extrabold text-emerald-700 dark:text-emerald-400 text-sm sm:text-lg flex items-center gap-1.5 sm:gap-2"><i class="fas fa-check-circle"></i> Sudah Lengkap Berkas</h4>
+                                <h4 class="font-extrabold text-emerald-700 dark:text-emerald-400 text-sm sm:text-lg flex items-center gap-1.5 sm:gap-2"><i class="fas fa-check-circle"></i> Sudah Lengkap Berkas (Satu Bulan)</h4>
                                 <span id="countLengkap" class="bg-emerald-500 text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full shadow-sm">0 Pegawai</span>
                             </div>
                             <ul id="listLengkap" class="p-3 sm:p-4 overflow-y-auto flex-1 bg-slate-50/30 dark:bg-transparent custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 content-start"></ul>
                         </div>
                     </div>
 
-                    <!-- TABEL DETAIL PUBLIK (Menggantikan fungsi matriks agar bisa dilihat publik) -->
+                    <!-- TABEL DETAIL PUBLIK -->
                     <div class="bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 overflow-hidden tracking-print-hide">
                         <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
                             <h3 class="font-extrabold text-slate-800 dark:text-white text-base sm:text-xl">Rincian Kelengkapan Berkas</h3>
@@ -436,7 +427,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Card List Style -->
                             <ul id="listMasterPegawai" class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 max-h-[400px] sm:max-h-[500px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                                 <!-- Render by JS -->
                             </ul>
@@ -471,7 +461,7 @@
         </div>
     </div>
 
-    <!-- Modal Form Lengkapi Cepat (Quick Edit) -->
+    <!-- Modal Form Lengkapi Cepat -->
     <div id="quickModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[110] flex items-center justify-center p-4 print:hidden">
         <div class="absolute inset-0" onclick="closeQuickModal()"></div>
         <div class="relative bg-white dark:bg-slate-850 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[95vh] z-10 fade-in border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -536,14 +526,12 @@
         const daftarBerkasWajib = ['RILL', 'Surat Pernyataan', 'Surat Tugas', 'SPPD', 'Laporan', 'Foto'];
         const daftarBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         
-        // Memori State Lokal
         let dataBerkas = [];
         let masterPegawai = []; 
         let dataNihil = []; 
         let currentView = 'matrix';
         let activeDetailPegawai = { nama: null, tahun: null }; 
 
-        // Variabel Firebase Global
         let db, fbCollection, fbDoc, fbSetDoc, fbDeleteDoc, fbOnSnapshot;
         let appId, currentUser;
         let useFirebase = false;
@@ -553,7 +541,6 @@
 
         const escJS = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-        // --- SISTEM TOGGLE SIDEBAR HP ---
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -568,7 +555,6 @@
             }
         }
 
-        // --- INIT FIREBASE (ASYNC) ---
         async function initFirebase() {
             try {
                 const firebaseApp = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
@@ -608,7 +594,6 @@
             }
         }
 
-        // --- EVENT LISTENER SAAT HALAMAN DIMUAT ---
         document.addEventListener('DOMContentLoaded', async () => {
             if (localStorage.getItem('soLengkapTheme') === 'dark') document.documentElement.classList.add('dark');
             
@@ -628,37 +613,28 @@
 
             generateCheckboxes('mainChecklistContainer', 'berkas');
             
-            // 1. Load Data Dari LocalStorage Dahulu Agar Tampilan Cepat Muncul
             loadDataLocal();
             updateFilterTahunOptions();
             updateDashFilterTahun();
-            applyRoleState(); // Otomatis merender tabel / dashboard
+            applyRoleState(); 
             
-            // 2. Hubungkan event listener Form HTML (Wajib sebelum Firebase mereplace data)
             document.getElementById('checklistForm').addEventListener('submit', handleFormSubmit);
             document.getElementById('quickForm').addEventListener('submit', handleQuickSubmit);
             document.getElementById('formMasterPegawai').addEventListener('submit', handleAddMasterPegawai);
             ['searchInput', 'filterTahun'].forEach(id => { document.getElementById(id).addEventListener('input', renderTable); });
 
-            // 3. Aktivasi Firebase di Latar Belakang
             const fbReady = await initFirebase();
             if (fbReady) {
-                document.getElementById('cloudStatusBadge').classList.remove('hidden'); // Munculkan icon online
-                
-                // Mendorong data lokal lama ke Firebase sekali saja
+                document.getElementById('cloudStatusBadge').classList.remove('hidden'); 
                 await migrateLocalToFirebase(); 
-                
-                // Menyalakan radar "Mendengarkan Perubahan Data Cloud Real-time"
                 setupRealtimeListeners();
             }
         });
 
-        // --- SISTEM FIREBASE SYNC KUSTOM ---
         async function migrateLocalToFirebase() {
             if (!useFirebase || !currentUser) return;
             const migratedFlag = localStorage.getItem('fb_migrated_v2_2');
             if (!migratedFlag) {
-                // Dorong semua array yang ada di localstorage saat ini ke Firebase
                 if (dataBerkas.length > 0) {
                     dataBerkas.forEach(d => addOrUpdateBokRecord(d));
                 }
@@ -676,7 +652,6 @@
         function setupRealtimeListeners() {
             if (!useFirebase || !currentUser) return;
             
-            // Listener 1: Seluruh Data BOK
             fbOnSnapshot(
                 fbCollection(db, 'artifacts', appId, 'public', 'data', 'bokData'),
                 (snapshot) => {
@@ -685,11 +660,9 @@
                     updateFilterTahunOptions();
                     updateDashFilterTahun();
                     
-                    // Segarkan Visual setelah menerima paketan data baru
                     renderTable();
                     renderDashboard();
                     
-                    // Auto Segarkan Modal Pop Up jika admin sedang membukanya
                     if(!document.getElementById('detailPegawaiModal').classList.contains('hidden') && activeDetailPegawai.nama) {
                         openDetailPegawai(activeDetailPegawai.nama, activeDetailPegawai.tahun);
                     }
@@ -697,7 +670,6 @@
                 (error) => console.error("Firebase Snapshot Error:", error)
             );
 
-            // Listener 2: Data Master Pegawai
             fbOnSnapshot(
                 fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'),
                 (docSnap) => {
@@ -711,7 +683,6 @@
                 (error) => console.error("Firebase Master Error:", error)
             );
 
-            // Listener 3: Data Daftar Nihil Kegiatan
             fbOnSnapshot(
                 fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'),
                 (docSnap) => {
@@ -723,7 +694,6 @@
                 (error) => console.error("Firebase Nihil Error:", error)
             );
 
-            // Listener 4: Sandi Admin Tersinkronisasi
             fbOnSnapshot(
                 fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'),
                 (docSnap) => {
@@ -736,13 +706,11 @@
             );
         }
 
-        // --- SISTEM CRUD (MEMBUAT, BACA, UBAH, HAPUS) DATA ---
-        
         function addOrUpdateBokRecord(record) {
             if(useFirebase && currentUser) {
                 fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record);
             }
-            saveDataLocal(); // Optimistic save ke local
+            saveDataLocal(); 
         }
 
         function deleteBokRecord(id) {
@@ -815,7 +783,6 @@
             updateSelectPegawai();
         }
 
-        // --- SISTEM ADMIN & TEMA ---
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -948,7 +915,6 @@
             }
         }
 
-        // Helper Tambahan
         const formatRp = (angka) => 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
         const formatShortDate = (dString) => {
             if(!dString) return ''; const d = new Date(dString);
@@ -1076,7 +1042,6 @@
                 </li>`).join('');
         }
 
-        // --- NIHIL KEGIATAN LOGIC ---
         function tandaiNihil(nama, bulan, tahun) {
             Swal.fire({
                 title: 'Tandai Nihil?', text: `${nama} tidak ada kegiatan BOK bulan ${bulan}?`, icon: 'question', showCancelButton: true, confirmButtonText: 'Tandai Nihil'
@@ -1095,7 +1060,6 @@
             saveNihilData(); renderDashboard();
         }
 
-        // --- SUBMIT FORM & TABLE ---
         function handleFormSubmit(e) {
             e.preventDefault();
             const namaPegawai = document.getElementById('namaPegawai').value; const tanggalVal = document.getElementById('tanggal').value;
@@ -1344,7 +1308,6 @@
             }
         }
 
-        // --- DASHBOARD ANALYTICS & TRACKING ---
         function renderDashboard() {
             let y = document.getElementById('dashFilterTahun').value;
             if (!y && dataBerkas.length > 0) {
@@ -1361,7 +1324,7 @@
             document.getElementById('dashBelumLengkap').innerHTML = `${incompleteCount} <span class="text-[8px] sm:text-sm font-medium text-slate-400">Berkas</span>`;
             document.getElementById('dashTotalPegawai').innerHTML = `${new Set(dSet.map(d=>d.namaPegawai)).size} <span class="text-[8px] sm:text-sm font-medium text-slate-400">Orang</span>`;
 
-            // --- TRACKING KEPATUHAN ---
+            // --- TRACKING KEPATUHAN (Satu Bulan untuk UI) ---
             const dBulan = dSet.filter(d => d.bulan === b);
             
             const statusPegawai = {};
@@ -1371,7 +1334,6 @@
                 else if (!isLengkap) statusPegawai[d.namaPegawai] = 'Ada Kurang';
             });
 
-            // Hanya saring yang "Lengkap"
             const arrLengkap = Object.keys(statusPegawai).filter(n => statusPegawai[n] === 'Lengkap').sort((a,b) => a.localeCompare(b));
 
             document.getElementById('countLengkap').textContent = `${arrLengkap.length} Pegawai`;
@@ -1398,44 +1360,90 @@
             }
         }
 
+        // FUNGSI CETAK DIPERBAIKI (Tampilkan Semua Bulan Sepanjang Tahun)
         function printTracking() {
             const y = document.getElementById('dashFilterTahun').value;
-            const b = document.getElementById('dashFilterBulan').value;
+            const dYear = dataBerkas.filter(d => String(d.tahun) === String(y));
             
-            const dBulan = dataBerkas.filter(d => String(d.tahun) === String(y) && d.bulan === b);
+            // Map status per pegawai per bulan
+            const pegawaiMap = {};
             
-            const statusPegawai = {};
-            dBulan.forEach(d => {
+            // Gunakan masterPegawai agar semua pegawai tercetak (meski belum input)
+            masterPegawai.forEach(nama => {
+                pegawaiMap[nama] = {};
+                daftarBulan.forEach(m => pegawaiMap[nama][m] = 'Belum Input');
+            });
+            
+            dYear.forEach(d => {
+                if (!pegawaiMap[d.namaPegawai]) {
+                    pegawaiMap[d.namaPegawai] = {};
+                    daftarBulan.forEach(m => pegawaiMap[d.namaPegawai][m] = 'Belum Input');
+                }
                 const isLengkap = d.berkasDilengkapi.length === daftarBerkasWajib.length;
-                if (!statusPegawai[d.namaPegawai]) statusPegawai[d.namaPegawai] = isLengkap ? 'Lengkap' : 'Ada Kurang';
-                else if (!isLengkap) statusPegawai[d.namaPegawai] = 'Ada Kurang';
+                
+                if (pegawaiMap[d.namaPegawai][d.bulan] === 'Belum Input' || pegawaiMap[d.namaPegawai][d.bulan] === 'Lengkap') {
+                    pegawaiMap[d.namaPegawai][d.bulan] = isLengkap ? 'Lengkap' : 'Ada Kurang';
+                } else if (!isLengkap) {
+                    pegawaiMap[d.namaPegawai][d.bulan] = 'Ada Kurang';
+                }
             });
 
-            const arrLengkap = Object.keys(statusPegawai).filter(n => statusPegawai[n] === 'Lengkap').sort((a,b) => a.localeCompare(b));
+            // Terapkan data Nihil
+            dataNihil.forEach(n => {
+                if (String(n.tahun) === String(y) && pegawaiMap[n.namaPegawai]) {
+                    if (pegawaiMap[n.namaPegawai][n.bulan] === 'Belum Input') {
+                        pegawaiMap[n.namaPegawai][n.bulan] = 'Nihil';
+                    }
+                }
+            });
+
+            const arrPegawai = Object.keys(pegawaiMap).sort((a,b) => a.localeCompare(b));
+
+            let tableRows = '';
+            arrPegawai.forEach((nama, i) => {
+                let row = `<tr>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${i+1}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${nama}</td>`;
+                
+                daftarBulan.forEach(m => {
+                    let status = pegawaiMap[nama][m];
+                    let icon = '';
+                    let color = '';
+                    
+                    if (status === 'Lengkap') { icon = '✓'; color = '#059669'; } 
+                    else if (status === 'Ada Kurang') { icon = '✗'; color = '#dc2626'; }
+                    else if (status === 'Nihil') { icon = '-'; color = '#64748b'; }
+                    
+                    row += `<td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: ${color}; font-weight: bold; font-size: 14px;">${icon}</td>`;
+                });
+                row += `</tr>`;
+                tableRows += row;
+            });
+
+            const thBulan = daftarBulan.map(m => `<th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">${m.substring(0,3)}</th>`).join('');
 
             const printHtml = `
-                <div style="text-align: center; padding-bottom: 20px; margin-bottom: 30px; border-bottom: 2px solid #333;">
-                    <h1 style="font-size: 24px; font-weight: bold; margin:0; text-transform: uppercase;">Laporan Pegawai Lengkap SPJ BOK</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 14px;">Periode: ${b} ${y}</p>
+                <div style="text-align: center; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 2px solid #333;">
+                    <h1 style="font-size: 22px; font-weight: bold; margin:0; text-transform: uppercase;">Laporan Kepatuhan Kelengkapan SPJ BOK</h1>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Periode Tahun: <b>${y}</b></p>
                 </div>
                 <div style="width: 100%;">
-                    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px 15px; margin-bottom: 15px; border-radius: 8px;">
-                        <h2 style="margin:0; color: #065f46; font-size: 16px;">☑️ Daftar Pegawai Sudah Lengkap Berkas</h2>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #064e3b;">Total: ${arrLengkap.length} Pegawai</p>
+                    <div style="margin-bottom: 10px; font-size: 12px; display: flex; gap: 20px; justify-content: center; background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <span><b style="color: #059669; font-size: 14px;">✓</b> : Lengkap</span>
+                        <span><b style="color: #dc2626; font-size: 14px;">✗</b> : Ada Kurang / Revisi</span>
+                        <span><b style="color: #64748b; font-size: 14px;">-</b> : Nihil</span>
+                        <span><b>Kosong</b> : Belum Input</span>
                     </div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                         <thead>
                             <tr style="background: #f1f5f9;">
-                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 40px;">No</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Nama Pegawai</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 150px;">Status Kelengkapan</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 40px;">No</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Nama Pegawai</th>
+                                ${thBulan}
                             </tr>
                         </thead>
                         <tbody>
-                            ${arrLengkap.length === 0 ? `<tr><td colspan="3" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; font-style: italic;">Belum ada pegawai dengan berkas lengkap di bulan ini</td></tr>` : 
-                            arrLengkap.map((n, i) => {
-                                return `<tr><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${n}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; color: #059669;">Lengkap</td></tr>`
-                            }).join('')}
+                            ${arrPegawai.length === 0 ? `<tr><td colspan="14" style="border: 1px solid #cbd5e1; padding: 12px; text-align: center; font-style: italic;">Belum ada data pegawai. Silakan tambahkan di Master Pegawai.</td></tr>` : tableRows}
                         </tbody>
                     </table>
                 </div>
@@ -1446,7 +1454,6 @@
             setTimeout(() => { window.print(); document.body.classList.remove('printing-tracking'); }, 200);
         }
 
-        // --- EXPORT & DB ---
         function deleteSingleData(id, isFromModal = false) {
             Swal.fire({ title: 'Hapus Rekapan?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Hapus' }).then(res => {
                 if(res.isConfirmed) { 
@@ -1621,7 +1628,6 @@
             Swal.fire({ icon: 'success', title: 'Tersimpan', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
         }
 
-        // Deklarasikan openDetailPegawai yang hilang karena duplikasi
         function openDetailPegawai(nama, tahun) {
             if(!isAdmin) return; 
             activeDetailPegawai = { nama, tahun };
