@@ -123,7 +123,6 @@
                 </div>
             </nav>
 
-            <!-- Ilustrasi Banner Bawah Sidebar -->
             <div class="p-4 shrink-0 border-t border-brand-border/50">
                 <div class="bg-brand-panel p-4 rounded-2xl border border-brand-border text-center relative overflow-hidden group">
                     <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 z-0"></div>
@@ -726,7 +725,7 @@
         
         let dataBerkas = [];
         let masterPegawai = []; 
-        let masterProgram = []; // Data untuk Daftar Program BOK
+        let masterProgram = []; 
         let dataNihil = []; 
         let currentView = 'matrix';
         let activeDetailPegawai = { nama: null, tahun: null }; 
@@ -745,6 +744,11 @@
 
         const escJS = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
+        // Helpers anti error DOM (Safe Setters)
+        const safeSetText = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
+        const safeSetHTML = (id, html) => { const el = document.getElementById(id); if(el) el.innerHTML = html; };
+        const safeSetWidth = (id, width) => { const el = document.getElementById(id); if(el) el.style.width = width; };
+
         // FUNGSI MODAL PENGATURAN
         function openSettingsModal() { 
             if(!isAdmin) return Swal.fire({title: 'Akses Ditolak', text: 'Login sebagai admin.', icon: 'error', background: '#131A2B', color: 'white'});
@@ -760,29 +764,33 @@
             const contentDetail = document.getElementById('pubDetailContent');
 
             if (tab === 'overview') {
-                btnOverview.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all whitespace-nowrap';
-                btnDetail.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent whitespace-nowrap';
-                contentOverview.classList.remove('hidden');
-                contentDetail.classList.add('hidden');
+                if(btnOverview) btnOverview.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all whitespace-nowrap';
+                if(btnDetail) btnDetail.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent whitespace-nowrap';
+                if(contentOverview) contentOverview.classList.remove('hidden');
+                if(contentDetail) contentDetail.classList.add('hidden');
             } else {
-                btnDetail.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all whitespace-nowrap';
-                btnOverview.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent whitespace-nowrap';
-                contentDetail.classList.remove('hidden');
-                contentOverview.classList.add('hidden');
+                if(btnDetail) btnDetail.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all whitespace-nowrap';
+                if(btnOverview) btnOverview.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent whitespace-nowrap';
+                if(contentDetail) contentDetail.classList.remove('hidden');
+                if(contentOverview) contentOverview.classList.add('hidden');
             }
         }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar.classList.contains('-translate-x-full')) {
+            if (sidebar && sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-            } else {
+                if(overlay) {
+                    overlay.classList.remove('hidden');
+                    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+                }
+            } else if (sidebar) {
                 sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
+                if(overlay) {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => overlay.classList.add('hidden'), 300);
+                }
             }
         }
 
@@ -812,7 +820,7 @@
                 fbDeleteDoc = firebaseFirestore.deleteDoc;
                 fbOnSnapshot = firebaseFirestore.onSnapshot;
 
-                appId = 'ceklist-puskesmas-v1';
+                appId = 'ceklist-puskesmas-v2';
 
                 await firebaseAuth.signInAnonymously(auth);
 
@@ -829,11 +837,14 @@
             document.documentElement.classList.add('dark');
             
             const today = new Date();
-            document.getElementById('tanggal').valueAsDate = today;
-            document.getElementById('dashFilterBulan').value = daftarBulan[today.getMonth()];
+            const elTgl = document.getElementById('tanggal');
+            if (elTgl) elTgl.valueAsDate = today;
+            
+            const elDashBulan = document.getElementById('dashFilterBulan');
+            if(elDashBulan) elDashBulan.value = daftarBulan[today.getMonth()];
             
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = today.toLocaleDateString('id-ID', options);
+            safeSetText('currentDate', today.toLocaleDateString('id-ID', options));
 
             generateCheckboxes('mainChecklistContainer', 'berkas');
             
@@ -842,16 +853,19 @@
             updateDashFilterTahun();
             applyRoleState(); 
             
-            document.getElementById('checklistForm').addEventListener('submit', handleFormSubmit);
-            document.getElementById('quickForm').addEventListener('submit', handleQuickSubmit);
-            document.getElementById('formMasterPegawai').addEventListener('submit', handleAddMasterPegawai);
-            document.getElementById('formMasterProgram').addEventListener('submit', handleAddMasterProgram);
-            ['searchInput', 'filterTahun'].forEach(id => { document.getElementById(id).addEventListener('input', renderTable); });
+            document.getElementById('checklistForm')?.addEventListener('submit', handleFormSubmit);
+            document.getElementById('quickForm')?.addEventListener('submit', handleQuickSubmit);
+            document.getElementById('formMasterPegawai')?.addEventListener('submit', handleAddMasterPegawai);
+            document.getElementById('formMasterProgram')?.addEventListener('submit', handleAddMasterProgram);
+            
+            ['searchInput', 'filterTahun'].forEach(id => { 
+                document.getElementById(id)?.addEventListener('input', renderTable); 
+            });
 
             const fbReady = await initFirebase();
             if (fbReady) {
-                document.getElementById('cloudStatusBadge').classList.remove('hidden'); 
-                document.getElementById('cloudStatusBadge').classList.add('flex');
+                document.getElementById('cloudStatusBadge')?.classList.remove('hidden'); 
+                document.getElementById('cloudStatusBadge')?.classList.add('flex');
                 await migrateLocalToFirebase(); 
                 setupRealtimeListeners();
             }
@@ -862,7 +876,7 @@
 
         async function migrateLocalToFirebase() {
             if (!useFirebase || !currentUser) return;
-            const migratedFlag = localStorage.getItem('fb_migrated_v3_0');
+            const migratedFlag = localStorage.getItem('fb_migrated_v4');
             if (!migratedFlag) {
                 if (dataBerkas.length > 0) { dataBerkas.forEach(d => addOrUpdateBokRecord(d)); }
                 if (masterPegawai.length > 0) saveMasterData();
@@ -873,7 +887,7 @@
                 if (localPwd && localPwd !== 'admin') {
                     fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), { adminPassword: localPwd }, {merge: true});
                 }
-                localStorage.setItem('fb_migrated_v3_0', 'true');
+                localStorage.setItem('fb_migrated_v4', 'true');
             }
         }
 
@@ -883,13 +897,26 @@
             fbOnSnapshot(
                 fbCollection(db, 'artifacts', appId, 'public', 'data', 'bokData'),
                 (snapshot) => {
-                    dataBerkas = [];
-                    snapshot.forEach(d => dataBerkas.push(d.data()));
+                    // Pencegah data terhapus jika firebase kosong namun data lokal ada (saat first connect)
+                    if (snapshot.empty && dataBerkas.length > 0 && !localStorage.getItem('fb_synced_v4')) {
+                        dataBerkas.forEach(d => addOrUpdateBokRecord(d));
+                        localStorage.setItem('fb_synced_v4', 'true');
+                        return;
+                    }
+                    localStorage.setItem('fb_synced_v4', 'true');
+                    
+                    let incoming = [];
+                    snapshot.forEach(d => incoming.push(d.data()));
+                    dataBerkas = incoming;
+                    saveDataLocal();
+                    
                     updateFilterTahunOptions();
                     updateDashFilterTahun();
                     renderTable();
                     renderDashboard();
-                    if(!document.getElementById('detailPegawaiModal').classList.contains('hidden') && activeDetailPegawai.nama) {
+                    
+                    const elModal = document.getElementById('detailPegawaiModal');
+                    if(elModal && !elModal.classList.contains('hidden') && activeDetailPegawai.nama) {
                         openDetailPegawai(activeDetailPegawai.nama, activeDetailPegawai.tahun);
                     }
                 },
@@ -901,9 +928,12 @@
                 (docSnap) => {
                     if (docSnap.exists()) {
                         masterPegawai = docSnap.data().names || [];
-                        const currentSelect = document.getElementById('namaPegawai').value;
+                        const currentSelect = document.getElementById('namaPegawai')?.value;
                         updateSelectPegawai();
-                        if (currentSelect && masterPegawai.includes(currentSelect)) { document.getElementById('namaPegawai').value = currentSelect; }
+                        if (currentSelect && masterPegawai.includes(currentSelect)) { 
+                            const sel = document.getElementById('namaPegawai');
+                            if(sel) sel.value = currentSelect; 
+                        }
                         renderMasterPegawai();
                         renderDashboard();
                     }
@@ -1083,10 +1113,13 @@
 
             if (window.innerWidth < 768) {
                 const sidebar = document.getElementById('mainSidebar');
-                if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
+                if (sidebar && !sidebar.classList.contains('-translate-x-full')) toggleSidebar();
             }
 
-            ['tabData', 'tabDashboard', 'tabPegawai', 'tabProgram'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['tabData', 'tabDashboard', 'tabPegawai', 'tabProgram'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
             ['btnTabData', 'btnTabDashboard', 'btnTabPegawai', 'btnTabProgram'].forEach(id => {
                 const btn = document.getElementById(id);
                 if(btn) {
@@ -1099,21 +1132,21 @@
             const inactiveBtnClass = ['text-gray-400'];
 
             if(tabId === 'data') {
-                document.getElementById('tabData').classList.remove('hidden'); document.getElementById('tabData').classList.add('flex');
-                document.getElementById('btnTabData').classList.remove(...inactiveBtnClass); document.getElementById('btnTabData').classList.add(...activeBtnClass);
+                document.getElementById('tabData')?.classList.remove('hidden'); document.getElementById('tabData')?.classList.add('flex');
+                document.getElementById('btnTabData')?.classList.remove(...inactiveBtnClass); document.getElementById('btnTabData')?.classList.add(...activeBtnClass);
                 renderTable();
             } else if (tabId === 'dashboard') {
-                document.getElementById('tabDashboard').classList.remove('hidden'); document.getElementById('tabDashboard').classList.add('block');
+                document.getElementById('tabDashboard')?.classList.remove('hidden'); document.getElementById('tabDashboard')?.classList.add('block');
                 const btn = document.getElementById('btnTabDashboard');
                 if(btn) { btn.classList.remove(...inactiveBtnClass); btn.classList.add(...activeBtnClass); }
                 switchPublicTab('overview');
                 renderDashboard();
             } else if (tabId === 'pegawai') {
-                document.getElementById('tabPegawai').classList.remove('hidden'); document.getElementById('tabPegawai').classList.add('block');
-                document.getElementById('btnTabPegawai').classList.remove(...inactiveBtnClass); document.getElementById('btnTabPegawai').classList.add(...activeBtnClass);
+                document.getElementById('tabPegawai')?.classList.remove('hidden'); document.getElementById('tabPegawai')?.classList.add('block');
+                document.getElementById('btnTabPegawai')?.classList.remove(...inactiveBtnClass); document.getElementById('btnTabPegawai')?.classList.add(...activeBtnClass);
                 renderMasterPegawai();
             } else if (tabId === 'program') {
-                document.getElementById('tabProgram').classList.remove('hidden'); document.getElementById('tabProgram').classList.add('block');
+                document.getElementById('tabProgram')?.classList.remove('hidden'); document.getElementById('tabProgram')?.classList.add('block');
                 const btn = document.getElementById('btnTabProgram');
                 if(btn) { btn.classList.remove(...inactiveBtnClass); btn.classList.add(...activeBtnClass); }
                 renderMasterProgram();
@@ -1131,7 +1164,9 @@
         };
 
         function generateCheckboxes(containerId, nameAttr) {
-            const container = document.getElementById(containerId); container.innerHTML = '';
+            const container = document.getElementById(containerId); 
+            if(!container) return;
+            container.innerHTML = '';
             daftarBerkasWajib.forEach(b => {
                 container.innerHTML += `
                 <label class="flex items-center space-x-2 cursor-pointer p-2.5 border border-brand-border rounded-xl hover:bg-white/5 transition-colors bg-[#0A0F1C] chk-label">
@@ -1152,19 +1187,26 @@
             }
         }
         function toggleCheckAll(name, isChecked) { document.querySelectorAll(`input[name="${name}"]`).forEach(cb => { cb.checked = isChecked; styleCheckbox(cb); }); }
-        function checkIndividual(name, selectAllId) { document.getElementById(selectAllId).checked = Array.from(document.querySelectorAll(`input[name="${name}"]`)).every(cb => cb.checked); }
+        function checkIndividual(name, selectAllId) { 
+            const el = document.getElementById(selectAllId);
+            if(el) el.checked = Array.from(document.querySelectorAll(`input[name="${name}"]`)).every(cb => cb.checked); 
+        }
 
         function setView(view) {
             currentView = view;
             const activeClass = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-panel shadow-sm text-blue-400 transition-all flex-1 sm:flex-none text-center";
             const inactiveClass = "px-4 py-2 text-xs font-bold rounded-lg text-gray-500 hover:text-white transition-all flex-1 sm:flex-none text-center";
-            document.getElementById('btnViewMatrix').className = view === 'matrix' ? activeClass : inactiveClass;
-            document.getElementById('btnViewList').className = view === 'list' ? activeClass : inactiveClass;
+            
+            const btnMatrix = document.getElementById('btnViewMatrix');
+            const btnList = document.getElementById('btnViewList');
+            if(btnMatrix) btnMatrix.className = view === 'matrix' ? activeClass : inactiveClass;
+            if(btnList) btnList.className = view === 'list' ? activeClass : inactiveClass;
             renderTable();
         }
 
         function updateSelectPegawai() {
             const select = document.getElementById('namaPegawai');
+            if(!select) return;
             masterPegawai.sort((a, b) => a.localeCompare(b));
             let html = '<option value="" disabled selected class="text-gray-500">Pilih Pegawai...</option>';
             masterPegawai.forEach(nama => html += `<option value="${nama}">${nama}</option>`);
@@ -1182,7 +1224,7 @@
 
         function syncAnggaranDariProgram(selectEl, targetId = 'nominal') {
             const tgt = document.getElementById(targetId);
-            if(selectEl.selectedIndex > 0) {
+            if(tgt && selectEl.selectedIndex > 0) {
                 tgt.value = selectEl.options[selectEl.selectedIndex].getAttribute('data-anggaran') || '';
             }
         }
@@ -1210,7 +1252,8 @@
 
         function renderMasterProgram() {
             const list = document.getElementById('listMasterProgram');
-            document.getElementById('masterProgramCount').textContent = masterProgram.length;
+            if(!list) return;
+            safeSetText('masterProgramCount', masterProgram.length);
             if (masterProgram.length === 0) { list.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500 text-sm">Belum ada program.</div>`; return; }
             list.innerHTML = masterProgram.map((p, idx) => `
                 <li class="bg-brand-panel p-4 rounded-2xl border border-brand-border flex justify-between items-center shadow-sm">
@@ -1271,10 +1314,12 @@
         }
 
         function renderMasterPegawai() {
-            const search = document.getElementById('searchMaster').value.toLowerCase();
+            const searchEl = document.getElementById('searchMaster');
             const list = document.getElementById('listMasterPegawai');
+            if(!list) return;
+            const search = searchEl ? searchEl.value.toLowerCase() : '';
             let filtered = masterPegawai.filter(m => m.toLowerCase().includes(search)).sort((a,b) => a.localeCompare(b));
-            document.getElementById('masterPegawaiCount').textContent = masterPegawai.length;
+            safeSetText('masterPegawaiCount', masterPegawai.length);
 
             if (filtered.length === 0) { list.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500 text-sm">Tidak ada pegawai ditemukan.</div>`; return; }
 
@@ -1311,7 +1356,8 @@
             updateFilterTahunOptions(); updateSelectPegawai();
             document.getElementById('namaPegawai').value = currentSelectedName;
 
-            if(document.getElementById('filterTahun').value !== tahun) document.getElementById('filterTahun').value = tahun;
+            const filterTahunEl = document.getElementById('filterTahun');
+            if(filterTahunEl && filterTahunEl.value !== tahun) filterTahunEl.value = tahun;
 
             if (document.getElementById('retainForm').checked) {
                 document.getElementById('checkAllMain').checked = false; toggleCheckAll('berkas', false);
@@ -1325,14 +1371,20 @@
         }
 
         function resetForm() {
-            document.getElementById('checklistForm').reset();
-            document.getElementById('tanggal').valueAsDate = new Date();
-            document.getElementById('checkAllMain').checked = false; toggleCheckAll('berkas', false);
-            document.getElementById('program').selectedIndex = 0;
+            const form = document.getElementById('checklistForm');
+            if(form) form.reset();
+            const tgl = document.getElementById('tanggal');
+            if(tgl) tgl.valueAsDate = new Date();
+            const checkAll = document.getElementById('checkAllMain');
+            if(checkAll) checkAll.checked = false; 
+            toggleCheckAll('berkas', false);
+            const prog = document.getElementById('program');
+            if(prog) prog.selectedIndex = 0;
         }
 
         function updateFilterTahunOptions() {
             const filterSelect = document.getElementById('filterTahun');
+            if(!filterSelect) return;
             let currentVal = filterSelect.value;
             const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a);
             if (years.length === 0) years.push(new Date().getFullYear().toString());
@@ -1343,6 +1395,7 @@
 
         function updateDashFilterTahun() {
             const filterDash = document.getElementById('dashFilterTahun');
+            if(!filterDash) return;
             let currentVal = filterDash.value;
             const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a);
             if (years.length === 0) years.push(new Date().getFullYear().toString());
@@ -1542,26 +1595,86 @@
             });
         }
 
-        // --- DASHBOARD LOGIC ---
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            const thead = document.getElementById('dataTableHead');
+            const emptyState = document.getElementById('emptyState');
+            const tableEl = document.getElementById('mainTableElement');
+            const filterTahunEl = document.getElementById('filterTahun');
+            const searchEl = document.getElementById('searchInput');
+            
+            if(!tbody || !thead || !filterTahunEl) return;
+
+            const qSearch = searchEl ? searchEl.value.toLowerCase() : '';
+            let qTahun = filterTahunEl.value;
+
+            if (!qTahun && dataBerkas.length > 0) {
+                const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a);
+                qTahun = years[0];
+            }
+
+            let filteredData = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
+            
+            if (filteredData.length === 0 && dataBerkas.length > 0) {
+                qTahun = dataBerkas[dataBerkas.length-1].tahun;
+                filterTahunEl.value = qTahun;
+                filteredData = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
+            }
+
+            const totalAnggaran = filteredData.reduce((sum, item) => sum + (Number(item.nominal) || 0), 0);
+            safeSetText('totalNominalFooter', formatRp(totalAnggaran));
+
+            if (currentView === 'matrix') {
+                safeSetText('textTotalPrefix', 'Pegawai');
+                thead.innerHTML = `<tr>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-1/5 min-w-[200px]">Info Pegawai</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Rekapitulasi per Bulan</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-1/4 min-w-[250px]">Kekurangan & Revisi</th>
+                </tr>`;
+            } else {
+                safeSetText('textTotalPrefix', 'Riwayat');
+                thead.innerHTML = `<tr>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Tgl & Prog</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Nama Pegawai</th>
+                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-1/3">Status Berkas</th>
+                    <th class="p-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider print:hidden">Aksi</th>
+                </tr>`;
+            }
+
+            const { html, count } = generateTableRowsHTML(filteredData, qSearch, qTahun, false);
+            tbody.innerHTML = html;
+            safeSetText('totalDataCount', count);
+
+            if (count === 0) { 
+                emptyState.classList.remove('hidden'); emptyState.classList.add('flex'); 
+                if(tableEl) tableEl.classList.add('hidden'); 
+            } else { 
+                emptyState.classList.add('hidden'); emptyState.classList.remove('flex'); 
+                if(tableEl) tableEl.classList.remove('hidden'); 
+            }
+        }
+
         function renderDashboard() {
-            let y = document.getElementById('dashFilterTahun').value;
+            let y = document.getElementById('dashFilterTahun')?.value;
             if (!y && dataBerkas.length > 0) {
                 const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a);
                 y = years[0];
             }
             
-            const activeBulan = document.getElementById('dashFilterBulan').value;
+            const activeBulan = document.getElementById('dashFilterBulan')?.value;
+            if(!activeBulan || !y) return; // Prevent render if DOM is not ready
             
             const dSet = dataBerkas.filter(d => String(d.tahun) === String(y));
-            document.getElementById('areaChartYearTitle').textContent = y;
+            safeSetText('areaChartYearTitle', y);
 
             const totalAnggaran = dSet.reduce((s, d) => s + (Number(d.nominal)||0), 0);
-            document.getElementById('dashTotalDana').textContent = formatRp(totalAnggaran);
+            safeSetText('dashTotalDana', formatRp(totalAnggaran));
             
             const dBulan = dSet.filter(d => d.bulan === activeBulan);
             const totalTarget = masterPegawai.length;
-            document.getElementById('dashTotalPegawaiVal').innerHTML = `${totalTarget} <span class="text-sm font-normal text-gray-400">Orang</span>`;
-            document.getElementById('donutTotalVal').textContent = totalTarget;
+            
+            safeSetHTML('dashTotalPegawaiVal', `${totalTarget} <span class="text-sm font-normal text-gray-400">Orang</span>`);
+            safeSetText('donutTotalVal', totalTarget);
 
             let lengkapCount = 0;
             let kurangCount = 0;
@@ -1585,44 +1698,45 @@
 
             const totalMenyetor = lengkapCount + kurangCount;
 
-            document.getElementById('dashSudahMenyetor').innerHTML = `${totalMenyetor} <span class="text-sm font-normal text-gray-400">Orang</span>`;
-            document.getElementById('dashBelumMenyetor').innerHTML = `${belumAdaCount} <span class="text-sm font-normal text-gray-400">Orang</span>`;
-            document.getElementById('dashNihil').innerHTML = `${nihilCount} <span class="text-sm font-normal text-gray-400">Orang</span>`;
+            safeSetHTML('dashSudahMenyetor', `${totalMenyetor} <span class="text-sm font-normal text-gray-400">Orang</span>`);
+            safeSetHTML('dashBelumMenyetor', `${belumAdaCount} <span class="text-sm font-normal text-gray-400">Orang</span>`);
+            safeSetHTML('dashNihil', `${nihilCount} <span class="text-sm font-normal text-gray-400">Orang</span>`);
             
             const pSudahSetor = totalTarget > 0 ? Math.round((totalMenyetor / totalTarget)*100) : 0;
             const pBelumSetor = totalTarget > 0 ? Math.round((belumAdaCount / totalTarget)*100) : 0;
             const pNihilSetor = totalTarget > 0 ? Math.round((nihilCount / totalTarget)*100) : 0;
             
-            document.getElementById('dashPersenSudah').innerHTML = `${pSudahSetor}% <span class="text-gray-500 font-normal">dari total pegawai</span>`;
-            document.getElementById('dashPersenBelum').innerHTML = `${pBelumSetor}% <span class="text-gray-500 font-normal">dari total pegawai</span>`;
-            document.getElementById('dashPersenNihil').innerHTML = `${pNihilSetor}% <span class="text-gray-500 font-normal">Tidak ada kegiatan</span>`;
+            safeSetHTML('dashPersenSudah', `${pSudahSetor}% <span class="text-gray-500 font-normal">dari total pegawai</span>`);
+            safeSetHTML('dashPersenBelum', `${pBelumSetor}% <span class="text-gray-500 font-normal">dari total pegawai</span>`);
+            safeSetHTML('dashPersenNihil', `${pNihilSetor}% <span class="text-gray-500 font-normal">Tidak ada kegiatan</span>`);
 
             const pLengkap = totalTarget > 0 ? Math.round((lengkapCount / totalTarget) * 100) : 0;
             const pKurang = totalTarget > 0 ? Math.round((kurangCount / totalTarget) * 100) : 0;
             const pKosong = totalTarget > 0 ? Math.round((belumAdaCount / totalTarget) * 100) : 0;
 
-            document.getElementById('legendaLengkapVal').textContent = `${lengkapCount} Orang`;
-            document.getElementById('legendaLengkapPct').textContent = `${pLengkap}%`;
+            safeSetText('legendaLengkapVal', `${lengkapCount} Orang`);
+            safeSetText('legendaLengkapPct', `${pLengkap}%`);
             
-            document.getElementById('legendaKurangVal').textContent = `${kurangCount} Orang`;
-            document.getElementById('legendaKurangPct').textContent = `${pKurang}%`;
+            safeSetText('legendaKurangVal', `${kurangCount} Orang`);
+            safeSetText('legendaKurangPct', `${pKurang}%`);
             
-            document.getElementById('legendaKosongVal').textContent = `${belumAdaCount} Orang`;
-            document.getElementById('legendaKosongPct').textContent = `${pKosong}%`;
+            safeSetText('legendaKosongVal', `${belumAdaCount} Orang`);
+            safeSetText('legendaKosongPct', `${pKosong}%`);
 
-            document.getElementById('legendaNihilVal').textContent = `${nihilCount} Orang`;
-            document.getElementById('legendaNihilPct').textContent = `${pNihilSetor}%`;
+            safeSetText('legendaNihilVal', `${nihilCount} Orang`);
+            safeSetText('legendaNihilPct', `${pNihilSetor}%`);
 
-            document.getElementById('cardLengkapValNum').textContent = lengkapCount;
-            document.getElementById('cardLengkapPctText').textContent = `${pLengkap}%`;
-            document.getElementById('cardLengkapBarLine').style.width = `${pLengkap}%`;
+            safeSetText('cardLengkapValNum', lengkapCount);
+            safeSetText('cardLengkapPctText', `${pLengkap}%`);
+            safeSetWidth('cardLengkapBarLine', `${pLengkap}%`);
 
-            document.getElementById('cardKurangValNum').textContent = kurangCount;
-            document.getElementById('cardKurangPctText').textContent = `${pKurang}%`;
-            document.getElementById('cardKurangBarLine').style.width = `${pKurang}%`;
+            safeSetText('cardKurangValNum', kurangCount);
+            safeSetText('cardKurangPctText', `${pKurang}%`);
+            safeSetWidth('cardKurangBarLine', `${pKurang}%`);
 
-            document.getElementById('bannerKepatuhanVal').textContent = `${pLengkap}%`;
+            safeSetHTML('bannerKepatuhanVal', `${pLengkap}%`);
 
+            // Doughnut Chart
             const ctxDoughnut = document.getElementById('statusDoughnutChart');
             if(ctxDoughnut) {
                 if(window.statusDoughnutChartInstance) window.statusDoughnutChartInstance.destroy();
@@ -1645,6 +1759,7 @@
                 });
             }
 
+            // Trend Chart
             const ctxTrend = document.getElementById('trendChart');
             if(ctxTrend) {
                 if(window.trendChartInstance) window.trendChartInstance.destroy();
@@ -1682,6 +1797,7 @@
                 });
             }
 
+            // Area Chart
             const ctxArea = document.getElementById('areaChart');
             if(ctxArea) {
                 if(window.areaChartInstance) window.areaChartInstance.destroy();
@@ -1709,6 +1825,7 @@
                 });
             }
 
+            // Table Body Publik
             const pbBody = document.getElementById('publicDataTableBody');
             if(pbBody) {
                 const searchPub = document.getElementById('publicSearchInput')?.value.toLowerCase() || '';
@@ -1721,7 +1838,6 @@
             }
         }
 
-        // FUNGSI TANDAI NIHIL DARI MODAL QUICK EDIT
         function tandaiNihilDariModal() {
             const nama = document.getElementById('quickNamaHidden').value;
             const [bulan, tahun] = document.getElementById('quickPeriode').textContent.split(' ');
@@ -1808,7 +1924,8 @@
                     </table>
                 </div>
             `;
-            document.getElementById('printTrackingArea').innerHTML = printHtml;
+            const area = document.getElementById('printTrackingArea');
+            if(area) area.innerHTML = printHtml;
             document.body.classList.add('printing-tracking');
             setTimeout(() => { window.print(); document.body.classList.remove('printing-tracking'); }, 200);
         }
@@ -1893,33 +2010,38 @@
 
         function openQuickModal(id, nama, bulan, tahun) {
             if(!isAdmin) return;
-            document.getElementById('quickId').value = id || '';
-            document.getElementById('quickNamaHidden').value = nama; 
-            document.getElementById('quickNama').textContent = nama;
-            document.getElementById('quickPeriode').textContent = `${bulan} ${tahun}`;
-            document.getElementById('quickModalTitle').innerHTML = id ? '<i class="fas fa-edit text-blue-400"></i> Edit SPJ' : '<i class="fas fa-plus text-blue-400"></i> Tambah SPJ Manual';
+            const elId = document.getElementById('quickId'); if(elId) elId.value = id || '';
+            const elNamaH = document.getElementById('quickNamaHidden'); if(elNamaH) elNamaH.value = nama; 
+            safeSetText('quickNama', nama);
+            safeSetText('quickPeriode', `${bulan} ${tahun}`);
+            safeSetHTML('quickModalTitle', id ? '<i class="fas fa-edit text-blue-400"></i> Edit SPJ' : '<i class="fas fa-plus text-blue-400"></i> Tambah SPJ Manual');
             
             generateCheckboxes('quickChecklistContainer', 'quickBerkas');
             
             let item = id ? dataBerkas.find(d => d.id === id) : null;
-            document.getElementById('quickTanggal').value = item ? item.tanggal : new Date().toISOString().split('T')[0];
-            document.getElementById('quickProgram').value = item ? (item.program || '') : '';
-            document.getElementById('quickNominal').value = item ? (item.nominal || '') : '';
-            document.getElementById('quickKeterangan').value = item ? (item.keterangan || '') : '';
+            const dt = document.getElementById('quickTanggal'); if(dt) dt.value = item ? item.tanggal : new Date().toISOString().split('T')[0];
+            const dp = document.getElementById('quickProgram'); if(dp) dp.value = item ? (item.program || '') : '';
+            const dn = document.getElementById('quickNominal'); if(dn) dn.value = item ? (item.nominal || '') : '';
+            const dk = document.getElementById('quickKeterangan'); if(dk) dk.value = item ? (item.keterangan || '') : '';
             
             const dilengkapi = item ? item.berkasDilengkapi : [];
             document.querySelectorAll('input[name="quickBerkas"]').forEach(cb => { 
                 cb.checked = dilengkapi.includes(cb.value); styleCheckbox(cb); 
             });
-            document.getElementById('checkAllQuick').checked = dilengkapi.length === daftarBerkasWajib.length && id !== '';
+            const chkQ = document.getElementById('checkAllQuick');
+            if(chkQ) chkQ.checked = dilengkapi.length === daftarBerkasWajib.length && id !== '';
             
-            // Tampilkan atau sembunyikan tombol "Tandai Nihil" berdasarkan mode (baru atau edit)
-            document.getElementById('btnTandaiNihilContainer').style.display = id === '' ? 'block' : 'none';
+            const btnNihil = document.getElementById('btnTandaiNihilContainer');
+            if(btnNihil) btnNihil.style.display = id === '' ? 'block' : 'none';
 
-            document.getElementById('quickModal').classList.remove('hidden');
+            const modal = document.getElementById('quickModal');
+            if(modal) modal.classList.remove('hidden');
         }
 
-        function closeQuickModal() { document.getElementById('quickModal').classList.add('hidden'); }
+        function closeQuickModal() { 
+            const modal = document.getElementById('quickModal');
+            if(modal) modal.classList.add('hidden'); 
+        }
 
         function handleQuickSubmit(e) {
             e.preventDefault();
@@ -1955,21 +2077,27 @@
 
             dataNihil = dataNihil.filter(n => !(n.namaPegawai === nama && n.bulan === mInput && String(n.tahun) === dInput.getFullYear().toString()));
             saveNihilData(); updateFilterTahunOptions(); renderTable(); closeQuickModal();
-            if (!document.getElementById('detailPegawaiModal').classList.contains('hidden')) openDetailPegawai(nama, document.getElementById('filterTahun').value);
+            
+            const dpModal = document.getElementById('detailPegawaiModal');
+            const ft = document.getElementById('filterTahun');
+            if (dpModal && !dpModal.classList.contains('hidden') && ft) openDetailPegawai(nama, ft.value);
+            
             Swal.fire({ icon: 'success', title: 'Tersimpan', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false, background: '#131A2B', color: 'white' });
         }
 
         function openDetailPegawai(nama, tahun) {
             if(!isAdmin) return; 
             activeDetailPegawai = { nama, tahun };
-            document.getElementById('detailPegawaiName').textContent = nama; 
-            document.getElementById('detailPegawaiYear').textContent = tahun;
-            document.getElementById('detailPegawaiInitial').textContent = nama.charAt(0).toUpperCase();
+            safeSetText('detailPegawaiName', nama);
+            safeSetText('detailPegawaiYear', tahun);
+            safeSetText('detailPegawaiInitial', nama.charAt(0).toUpperCase());
             
             const pData = dataBerkas.filter(d => d.namaPegawai === nama && String(d.tahun) === String(tahun));
-            document.getElementById('detailTotalDana').textContent = formatRp(pData.reduce((sum, d) => sum + (Number(d.nominal) || 0), 0));
+            safeSetText('detailTotalDana', formatRp(pData.reduce((sum, d) => sum + (Number(d.nominal) || 0), 0)));
             
             const listContainer = document.getElementById('detailPegawaiList');
+            if(!listContainer) return;
+
             pData.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
             
             if (pData.length === 0) listContainer.innerHTML = `<div class="p-8 text-center text-gray-500 font-medium">Belum ada riwayat kegiatan.</div>`;
@@ -1981,7 +2109,9 @@
                     ${item.nominal ? `<div class="text-xs font-bold text-gray-400 mt-3"><i class="fas fa-wallet mr-1 text-blue-400"></i> Dana: <span class="text-emerald-400">${formatRp(item.nominal)}</span></div>` : ''}${item.keterangan ? `<div class="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-lg mt-3 shadow-sm"><i class="fas fa-sticky-note mr-1 opacity-70"></i> ${escJS(item.keterangan)}</div>` : ''}</div>
                     <div class="flex sm:flex-col justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-brand-border"><button onclick="openQuickModal('${item.id}', '${escJS(nama)}', '${item.bulan}', '${tahun}')" class="text-xs font-bold bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl text-blue-400 hover:bg-blue-600 hover:text-white transition-all w-full sm:w-auto"><i class="fas fa-edit"></i> Edit</button><button onclick="deleteSingleData('${item.id}', true)" class="text-xs font-bold bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all w-full sm:w-auto"><i class="fas fa-trash"></i> Hapus</button></div></div>`;
             }).join('');
-            document.getElementById('detailPegawaiModal').classList.remove('hidden');
+            
+            const modal = document.getElementById('detailPegawaiModal');
+            if(modal) modal.classList.remove('hidden');
         }
     </script>
 </body>
