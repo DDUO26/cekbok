@@ -46,7 +46,7 @@
         @media print {
             @page { size: landscape; margin: 10mm; }
             body, html { height: auto !important; overflow: visible !important; background-color: white !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: black !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .print\:hidden { display: none !important; }
             body.printing-tracking > :not(#printTrackingArea) { display: none !important; }
             body.printing-tracking #printTrackingArea { 
@@ -1408,13 +1408,31 @@
                 daftarBulan.forEach(m => {
                     let status = pegawaiMap[nama][m];
                     let icon = '';
-                    let color = '';
+                    let bgColor = '';
+                    let textColor = '';
                     
-                    if (status === 'Lengkap') { icon = '✓'; color = '#059669'; } 
-                    else if (status === 'Ada Kurang') { icon = '✗'; color = '#dc2626'; }
-                    else if (status === 'Nihil') { icon = '-'; color = '#64748b'; }
+                    if (status === 'Lengkap') { 
+                        icon = '✓'; 
+                        bgColor = '#dcfce7'; 
+                        textColor = '#166534'; 
+                    } 
+                    else if (status === 'Ada Kurang') { 
+                        icon = '!'; 
+                        bgColor = '#fef08a'; 
+                        textColor = '#854d0e'; 
+                    }
+                    else if (status === 'Belum Input') { 
+                        icon = '✗'; 
+                        bgColor = '#fee2e2'; 
+                        textColor = '#991b1b'; 
+                    }
+                    else if (status === 'Nihil') { 
+                        icon = '-'; 
+                        bgColor = '#ffffff'; 
+                        textColor = '#64748b'; 
+                    }
                     
-                    row += `<td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: ${color}; font-weight: bold; font-size: 14px;">${icon}</td>`;
+                    row += `<td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; background-color: ${bgColor} !important; color: ${textColor} !important; font-weight: bold; font-size: 14px;">${icon}</td>`;
                 });
                 row += `</tr>`;
                 tableRows += row;
@@ -1428,11 +1446,11 @@
                     <p style="margin: 5px 0 0 0; font-size: 14px;">Periode Tahun: <b>${y}</b></p>
                 </div>
                 <div style="width: 100%;">
-                    <div style="margin-bottom: 10px; font-size: 12px; display: flex; gap: 20px; justify-content: center; background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                        <span><b style="color: #059669; font-size: 14px;">✓</b> : Lengkap</span>
-                        <span><b style="color: #dc2626; font-size: 14px;">✗</b> : Ada Kurang / Revisi</span>
-                        <span><b style="color: #64748b; font-size: 14px;">-</b> : Nihil</span>
-                        <span><b>Kosong</b> : Belum Input</span>
+                    <div style="margin-bottom: 10px; font-size: 12px; display: flex; gap: 15px; justify-content: center; background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap;">
+                        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block; width:14px; height:14px; background:#dcfce7; border:1px solid #86efac; border-radius:3px;"></span> Lengkap (✓)</span>
+                        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block; width:14px; height:14px; background:#fef08a; border:1px solid #fde047; border-radius:3px;"></span> Ada Revisi / Kurang (!)</span>
+                        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block; width:14px; height:14px; background:#fee2e2; border:1px solid #fca5a5; border-radius:3px;"></span> Belum Masuk Berkas (✗)</span>
+                        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block; width:14px; height:14px; background:#ffffff; border:1px solid #cbd5e1; border-radius:3px;"></span> Nihil / Tidak Ada Kegiatan (-)</span>
                     </div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                         <thead>
