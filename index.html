@@ -377,38 +377,32 @@
                         </div>
                     </div>
 
-                    <!-- 2 Kartu Metrik (Telah Disederhanakan) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 tracking-print-hide">
+                    <!-- Metrik & Grafik Minimalis Unik -->
+                    <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-8 tracking-print-hide">
                         
-                        <!-- Card 1: Serapan SPJ -->
-                        <div class="bg-card-green rounded-2xl p-6 relative overflow-hidden shadow-[0_8px_30px_rgba(16,185,129,0.2)] flex flex-col justify-center">
-                            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20"></div>
-                            <div class="relative z-10 flex items-center gap-5">
-                                <div class="bg-white/20 backdrop-blur-md w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-inner border border-white/10 shrink-0">
-                                    <i class="fas fa-wallet text-2xl"></i>
+                        <!-- Unique Small Serapan -->
+                        <div class="relative group cursor-default h-32 flex-1 min-w-[240px]">
+                            <!-- Outer glow -->
+                            <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-emerald-500 rounded-[2rem] blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                            <div class="relative bg-brand-bg border border-brand-border rounded-[2rem] px-6 py-4 flex flex-col justify-center gap-2 h-full">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-[#1A1D36] w-9 h-9 rounded-full flex items-center justify-center shadow-inner border border-white/5">
+                                        <i class="fas fa-wallet text-base text-emerald-400"></i>
+                                    </div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Serapan SPJ</p>
                                 </div>
-                                <div>
-                                    <p class="text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">Total Serapan SPJ</p>
-                                    <h3 class="text-3xl sm:text-4xl font-bold text-white leading-none truncate" id="dashTotalDana">Rp 0</h3>
-                                    <p class="text-xs text-white/80 mt-2">Seluruh anggaran yang terserap untuk periode terpilih</p>
-                                </div>
+                                <h3 class="text-3xl font-black text-white ml-1 truncate tracking-tight" id="dashTotalDana">Rp 0</h3>
                             </div>
                         </div>
 
-                        <!-- Card 2: Grafik Minimalis Status Kelengkapan -->
-                        <div class="bg-brand-panel rounded-2xl p-5 border border-brand-border shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex flex-col justify-center h-full relative overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-[#1A1D36] to-[#0F1123] z-0"></div>
-                            <div class="relative z-10 w-full h-full flex flex-col">
-                                <div class="flex justify-between items-center mb-2">
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Perbandingan Status Berkas (Bulan Ini)</p>
-                                    <i class="fas fa-chart-pie text-gray-500"></i>
-                                </div>
-                                <div class="flex-1 min-h-[70px] relative w-full mt-2">
-                                    <canvas id="minimalBarChart"></canvas>
-                                </div>
+                        <!-- Chart Small Vertical -->
+                        <div class="bg-brand-panel rounded-3xl p-4 border border-brand-border shadow-lg flex flex-col justify-between w-full md:w-48 h-32 relative shrink-0">
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest text-center mb-2">Status Berkas</p>
+                            <div class="flex-1 w-full relative">
+                                <canvas id="minimalBarChart"></canvas>
                             </div>
                         </div>
-
+                        
                     </div>
 
                     <!-- MONITORING KEPATUHAN BOARD -->
@@ -1286,13 +1280,23 @@
                                 if (missing.length === 0) lengkap++;
                                 missing.forEach(b => { missingCounts[b] = (missingCounts[b] || 0) + 1; });
                                 
-                                const isComplete = missing.length === 0; const hasNote = i.keterangan && i.keterangan.trim() !== '';
+                                const isComplete = missing.length === 0; 
+                                const hasNote = i.keterangan && i.keterangan.trim() !== '';
                                 const dateStr = formatDayMonth(i.tanggal);
 
-                                if (!isComplete && hasNote) datesHtml += `<span class="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm" title="${escJS(i.keterangan)}">${dateStr}</span>`;
-                                else if (!isComplete) datesHtml += `<span class="bg-yellow-500 text-yellow-900 font-bold text-[9px] px-1.5 py-0.5 rounded shadow-sm">${dateStr}</span>`;
-                                else if (hasNote) datesHtml += `<span class="bg-orange-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm" title="${escJS(i.keterangan)}">${dateStr}</span>`;
-                                else datesHtml += `<span class="bg-emerald-500 text-white font-bold text-[9px] px-1.5 py-0.5 rounded shadow-sm">${dateStr}</span>`;
+                                if (!isComplete && hasNote) {
+                                    // Merah & Kuning (Belum lengkap & ada catatan) - Dibelah tajam
+                                    datesHtml += `<span class="text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm border border-brand-border" style="background: linear-gradient(135deg, #ef4444 50%, #eab308 50%); text-shadow: 0px 0px 2px rgba(0,0,0,0.8);" title="Catatan: ${escJS(i.keterangan)} | Kurang: ${missing.join(', ')}">${dateStr}</span>`;
+                                } else if (!isComplete) {
+                                    // Merah (Belum lengkap)
+                                    datesHtml += `<span class="bg-red-500 text-white font-bold text-[9px] px-1.5 py-0.5 rounded shadow-sm" title="Kurang: ${missing.join(', ')}">${dateStr}</span>`;
+                                } else if (hasNote) {
+                                    // Kuning (Lengkap tapi ada catatan)
+                                    datesHtml += `<span class="bg-yellow-500 text-yellow-900 font-bold text-[9px] px-1.5 py-0.5 rounded shadow-sm" title="Catatan: ${escJS(i.keterangan)}">${dateStr}</span>`;
+                                } else {
+                                    // Hijau (Lengkap & tanpa catatan)
+                                    datesHtml += `<span class="bg-emerald-500 text-white font-bold text-[9px] px-1.5 py-0.5 rounded shadow-sm" title="Lengkap">${dateStr}</span>`;
+                                }
                                 
                                 if (hasNote) {
                                     let noteKey = i.keterangan.trim().toLowerCase();
@@ -1302,7 +1306,7 @@
                             });
 
                             const persen = Math.round((lengkap / total) * 100);
-                            let bgClass = persen === 100 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-yellow-500/10 border-yellow-500/30';
+                            let bgClass = persen === 100 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/5 border-red-500/30';
                             
                             // Tombol Edit Masal (Lengkapi Semua) jika belum lengkap 100%
                             let bulkCompleteBtn = '';
@@ -1499,30 +1503,31 @@
             const belumAdaBerkas = 0; // Mengikuti asumsi UI gambar
             const kurangCount = totalMenyetor - arrLengkap.length;
 
-            // Render Bar Chart Minimalis (Pengganti Tampilan Kartu Total Kegiatan dll)
+            // Render Bar Chart Minimalis Vertical Unik
             const ctxBar = document.getElementById('minimalBarChart');
             if(ctxBar) {
                 if(window.minimalChartInstance) window.minimalChartInstance.destroy();
                 window.minimalChartInstance = new Chart(ctxBar, {
                     type: 'bar',
                     data: {
-                        labels: [''],
-                        datasets: [
-                            { label: 'Sudah Lengkap', data: [arrLengkap.length], backgroundColor: '#10B981', borderRadius: 6, barThickness: 24 },
-                            { label: 'Perlu Revisi', data: [kurangCount], backgroundColor: '#F59E0B', borderRadius: 6, barThickness: 24 }
-                        ]
+                        labels: ['Lengkap', 'Revisi'],
+                        datasets: [{
+                            data: [arrLengkap.length, kurangCount],
+                            backgroundColor: ['#10B981', '#EF4444'],
+                            borderRadius: 4,
+                            barThickness: 16
+                        }]
                     },
                     options: {
-                        indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: { 
-                            legend: { display: true, position: 'bottom', labels: {color: '#9CA3AF', font:{size: 11}, boxWidth: 12, padding: 15} },
+                            legend: { display: false },
                             tooltip: { enabled: true, backgroundColor: '#1A1D36', titleColor: '#fff', bodyColor: '#fff', borderColor: '#2E3257', borderWidth: 1 }
                         },
                         scales: {
-                            x: { stacked: true, display: false, max: totalMenyetor > 0 ? totalMenyetor : 1 },
-                            y: { stacked: true, display: false }
+                            x: { display: true, ticks: {color: '#9CA3AF', font: {size: 9}}, grid: {display: false}, border: {display: false} },
+                            y: { display: false, beginAtZero: true, grid: {display: false}, border: {display: false} }
                         },
                         layout: { padding: 0 }
                     }
