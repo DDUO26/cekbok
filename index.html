@@ -18,13 +18,12 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         brand: {
-                            bg: '#0A0F1C',       // Background sangat gelap
-                            panel: '#131A2B',    // Background Card
-                            border: '#1E293B',   // Border
+                            bg: '#0A0F1C',       
+                            panel: '#131A2B',    
+                            border: '#1E293B',   
                             blue: '#2563EB',
                             blueglow: '#3B82F6', 
                         },
-                        // Warna khusus kartu dashboard
                         card1: { bg: '#101B36', border: '#1C315E', text: '#3B82F6' },
                         card2: { bg: '#092723', border: '#104A41', text: '#10B981' },
                         card3: { bg: '#21163F', border: '#3C2673', text: '#A855F7' },
@@ -44,7 +43,6 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Input borderless untuk form SPJ */
         .input-borderless { 
             background-color: transparent !important; 
             border: none !important; 
@@ -62,6 +60,20 @@
         select.input-borderless option { background-color: #131A2B; color: white; }
 
         .glass-panel { background: rgba(19, 26, 43, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+
+        .progress-circle {
+            background: conic-gradient(#3B82F6 0deg, #1E293B 0deg);
+            border-radius: 50%;
+            position: relative;
+        }
+        .progress-circle::before {
+            content: "";
+            position: absolute;
+            inset: 12px;
+            background-color: #131A2B;
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
 
         @media print {
             @page { size: landscape; margin: 10mm; }
@@ -103,13 +115,10 @@
                 <div class="admin-only hidden">
                     <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2">Manajemen</p>
                     <button onclick="switchTab('pegawai')" id="btnTabPegawai" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 hover:bg-white/5 hover:text-white">
-                        <i class="fas fa-users w-5"></i> Master Pegawai
+                        <i class="fas fa-users w-5"></i> Daftar Pegawai
                     </button>
-                    <button onclick="changePassword()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 hover:bg-white/5 hover:text-white">
-                        <i class="fas fa-lock w-5"></i> Ubah Sandi Admin
-                    </button>
-                    <button onclick="switchTab('data'); setTimeout(()=>document.getElementById('backupPanel').scrollIntoView({behavior:'smooth'}), 100);" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 hover:bg-white/5 hover:text-white">
-                        <i class="fas fa-database w-5"></i> Backup & Restore
+                    <button onclick="switchTab('program')" id="btnTabProgram" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 hover:bg-white/5 hover:text-white">
+                        <i class="fas fa-list-alt w-5"></i> Daftar Program
                     </button>
                 </div>
             </nav>
@@ -127,7 +136,7 @@
                     </div>
                 </div>
                 <div class="text-center mt-3 text-[9px] text-gray-500">
-                    &copy; 2026 SPJ Puskesmas<br>All rights reserved
+                    Developed by D.DUO &copy; 2026 | Version 1.0.0
                 </div>
             </div>
         </div>
@@ -162,11 +171,7 @@
                     <input type="text" placeholder="Cari pegawai / data..." class="w-full bg-[#1A2235] border border-brand-border text-white text-xs rounded-full pl-9 pr-4 py-2 outline-none focus:border-blue-500 transition-all">
                 </div>
 
-                <button class="text-gray-400 hover:text-white transition-colors relative">
-                    <i class="fas fa-bell text-lg"></i>
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-[8px] font-bold text-white flex items-center justify-center rounded-full border-2 border-brand-bg">3</span>
-                </button>
-                <button id="themeToggle" onclick="toggleDarkMode()" class="text-gray-400 hover:text-white transition-colors">
+                <button onclick="openSettingsModal()" class="text-gray-400 hover:text-white transition-colors">
                     <i class="fas fa-cog text-lg"></i>
                 </button>
 
@@ -229,7 +234,9 @@
                                         </div>
                                         <div>
                                             <label class="text-[10px] font-bold text-gray-500 mb-1 block">Program</label>
-                                            <input type="text" id="program" list="listProgramDef" placeholder="Cth: Promkes" class="input-borderless w-full text-base font-semibold placeholder-gray-600">
+                                            <select id="program" class="input-borderless w-full text-base font-semibold cursor-pointer" onchange="syncAnggaranDariProgram(this)">
+                                                <option value="">Pilih / Umum</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div>
@@ -261,21 +268,6 @@
                                     </button>
                                 </div>
                             </form>
-                        </div>
-                    </div>
-                    <!-- Backup Panel -->
-                    <div id="backupPanel" class="bg-brand-panel rounded-2xl shadow-xl border border-brand-border p-5">
-                        <h3 class="font-bold text-sm text-white mb-4 flex items-center gap-2"><i class="fas fa-server text-blue-400"></i> Sistem Database</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button onclick="backupData()" class="bg-[#0A0F1C] border border-brand-border hover:bg-white/5 text-gray-300 py-3 rounded-xl text-xs font-bold flex flex-col items-center gap-2 transition-colors">
-                                <i class="fas fa-download text-lg text-emerald-400"></i> Backup PC
-                            </button>
-                            <div class="relative">
-                                <input type="file" id="restoreFile" accept=".json" class="hidden" onchange="restoreData(event)">
-                                <button onclick="document.getElementById('restoreFile').click()" class="w-full h-full bg-[#0A0F1C] border border-brand-border text-gray-300 py-3 rounded-xl text-xs font-bold flex flex-col items-center gap-2 hover:bg-white/5 transition-colors">
-                                    <i class="fas fa-upload text-lg text-blue-400"></i> Restore DB
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -336,14 +328,17 @@
                                 <i class="far fa-calendar-alt"></i>
                             </div>
                             <span class="text-sm font-medium text-gray-400 px-2">Periode</span>
+                            <select id="dashFilterBulan" class="bg-[#0A0F1C] text-white border border-brand-border rounded-lg text-sm font-bold py-1.5 px-3 focus:border-blue-500 outline-none cursor-pointer" onchange="renderDashboard()">
+                                <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option><option value="April">April</option><option value="Mei">Mei</option><option value="Juni" selected>Juni</option><option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option><option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+                            </select>
                             <select id="dashFilterTahun" class="bg-[#0A0F1C] text-white border border-brand-border rounded-lg text-sm font-bold py-1.5 px-3 focus:border-blue-500 outline-none cursor-pointer" onchange="renderDashboard()"></select>
                         </div>
                     </div>
 
                     <!-- DASHBOARD TABS (STATISTIK VS RINCIAN BERKAS) -->
-                    <div class="flex gap-2 sm:gap-6 border-b border-[#1E293B] px-2 tracking-print-hide">
-                        <button onclick="switchPublicTab('overview')" id="btnPubTabOverview" class="pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all">📊 Ringkasan Statistik</button>
-                        <button onclick="switchPublicTab('detail')" id="btnPubTabDetail" class="pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent">📑 Rincian Kelengkapan Berkas</button>
+                    <div class="flex gap-2 sm:gap-6 border-b border-[#1E293B] px-2 tracking-print-hide overflow-x-auto custom-scrollbar">
+                        <button onclick="switchPublicTab('overview')" id="btnPubTabOverview" class="pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all whitespace-nowrap">📊 Ringkasan Statistik</button>
+                        <button onclick="switchPublicTab('detail')" id="btnPubTabDetail" class="pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent whitespace-nowrap">📑 Rincian Kelengkapan Berkas</button>
                     </div>
 
                     <!-- TAB KONTEN 1: STATISTIK (OVERVIEW) -->
@@ -359,27 +354,27 @@
                                 </div>
                             </div>
                             <div class="bg-card2-bg border border-card2-border rounded-2xl p-5 relative overflow-hidden flex items-center gap-5 shadow-lg">
-                                <div class="w-14 h-14 rounded-full border border-card2-text/30 flex items-center justify-center text-card2-text relative z-10"><div class="w-10 h-10 rounded-full bg-card2-text flex items-center justify-center text-white"><i class="fas fa-users text-xl"></i></div></div>
+                                <div class="w-14 h-14 rounded-full border border-card2-text/30 flex items-center justify-center text-card2-text relative z-10"><div class="w-10 h-10 rounded-full bg-card2-text flex items-center justify-center text-white"><i class="fas fa-clipboard-check text-xl"></i></div></div>
                                 <div class="relative z-10">
-                                    <p class="text-[10px] text-gray-300 mb-1">Pegawai Total</p>
-                                    <h3 class="text-2xl font-bold text-white mb-1 leading-none" id="dashTotalPegawaiVal">0 <span class="text-sm font-normal text-gray-400">Orang</span></h3>
-                                    <p class="text-[9px] text-gray-400">Aktif terdaftar di puskesmas</p>
-                                </div>
-                            </div>
-                            <div class="bg-card3-bg border border-card3-border rounded-2xl p-5 relative overflow-hidden flex items-center gap-5 shadow-lg">
-                                <div class="w-14 h-14 rounded-full border border-card3-text/30 flex items-center justify-center text-card3-text relative z-10"><div class="w-10 h-10 rounded-full bg-card3-text flex items-center justify-center text-white"><i class="fas fa-clipboard-check text-xl"></i></div></div>
-                                <div class="relative z-10">
-                                    <p class="text-[10px] text-gray-300 mb-1">Sudah Menyetor <span class="text-gray-500">(Bulan Terpilih)</span></p>
+                                    <p class="text-[10px] text-gray-300 mb-1">Masuk Berkas <span class="text-gray-500">(Bulan Ini)</span></p>
                                     <h3 class="text-2xl font-bold text-white mb-1 leading-none" id="dashSudahMenyetor">0 <span class="text-sm font-normal text-gray-400">Orang</span></h3>
-                                    <p class="text-[9px] text-card3-text font-bold" id="dashPersenSudah">0% <span class="text-gray-500 font-normal">dari total pegawai</span></p>
+                                    <p class="text-[9px] text-card2-text font-bold" id="dashPersenSudah">0% <span class="text-gray-500 font-normal">dari pegawai</span></p>
                                 </div>
                             </div>
                             <div class="bg-card4-bg border border-card4-border rounded-2xl p-5 relative overflow-hidden flex items-center gap-5 shadow-lg">
                                 <div class="w-14 h-14 rounded-full border border-card4-text/30 flex items-center justify-center text-card4-text relative z-10"><div class="w-10 h-10 rounded-full bg-card4-text flex items-center justify-center text-white"><i class="fas fa-clock text-xl"></i></div></div>
-                                <div class="relative z-10 flex-1">
-                                    <p class="text-[10px] text-gray-300 mb-1">Belum Menyetor</p>
+                                <div class="relative z-10">
+                                    <p class="text-[10px] text-gray-300 mb-1">Belum Masuk Berkas</p>
                                     <h3 class="text-2xl font-bold text-white mb-1 leading-none" id="dashBelumMenyetor">0 <span class="text-sm font-normal text-gray-400">Orang</span></h3>
-                                    <p class="text-[9px] text-card4-text font-bold" id="dashPersenBelum">0% <span class="text-gray-500 font-normal">dari total pegawai</span></p>
+                                    <p class="text-[9px] text-card4-text font-bold" id="dashPersenBelum">0% <span class="text-gray-500 font-normal">dari pegawai</span></p>
+                                </div>
+                            </div>
+                            <div class="bg-[#1A2235] border border-[#2E3B52] rounded-2xl p-5 relative overflow-hidden flex items-center gap-5 shadow-lg">
+                                <div class="w-14 h-14 rounded-full border border-slate-500/30 flex items-center justify-center text-slate-400 relative z-10"><div class="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-white"><i class="fas fa-bed text-xl"></i></div></div>
+                                <div class="relative z-10 flex-1">
+                                    <p class="text-[10px] text-gray-300 mb-1">Status Nihil</p>
+                                    <h3 class="text-2xl font-bold text-white mb-1 leading-none" id="dashNihil">0 <span class="text-sm font-normal text-gray-400">Orang</span></h3>
+                                    <p class="text-[9px] text-slate-400" id="dashPersenNihil">0% <span class="text-gray-500">Tidak ada kegiatan</span></p>
                                 </div>
                             </div>
                         </div>
@@ -396,12 +391,6 @@
                                         <h2 class="text-xl font-bold text-white tracking-tight">Status Penyetoran SPJ Pegawai</h2>
                                         <p class="text-xs text-slate-400">Ringkasan kondisi penyetoran SPJ bulan ini.</p>
                                     </div>
-                                </div>
-                                <div class="flex items-center gap-2 bg-[#1A2235] p-1.5 rounded-xl border border-[#2E3B52]">
-                                    <span class="text-xs font-bold text-slate-400 pl-2">Filter Bulan:</span>
-                                    <select id="dashFilterBulan" class="bg-[#0A0F1C] text-white border border-[#2E3B52] rounded-lg text-xs font-bold py-1.5 px-3 focus:border-indigo-500 outline-none cursor-pointer" onchange="renderDashboard()">
-                                        <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option><option value="April">April</option><option value="Mei">Mei</option><option value="Juni" selected>Juni</option><option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option><option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
-                                    </select>
                                 </div>
                             </div>
 
@@ -434,10 +423,17 @@
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full border border-purple-500 bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.3)]"><i class="fas fa-file-excel text-xs"></i></div>
+                                            <div class="w-8 h-8 rounded-full border border-red-500 bg-red-500/10 flex items-center justify-center text-red-400 shrink-0 shadow-[0_0_10px_rgba(239,68,68,0.3)]"><i class="fas fa-times text-xs"></i></div>
                                             <div>
-                                                <h4 class="text-sm font-bold text-white leading-tight">Belum Ada Berkas</h4>
-                                                <p class="text-xs text-purple-400 font-bold mt-0.5"><span id="legendaKosongVal">0 Orang</span> <span class="text-slate-600 font-normal mx-1">|</span> <span id="legendaKosongPct">0%</span></p>
+                                                <h4 class="text-sm font-bold text-white leading-tight">Belum Masuk Berkas</h4>
+                                                <p class="text-xs text-red-400 font-bold mt-0.5"><span id="legendaKosongVal">0 Orang</span> <span class="text-slate-600 font-normal mx-1">|</span> <span id="legendaKosongPct">0%</span></p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full border border-slate-500 bg-slate-500/10 flex items-center justify-center text-slate-400 shrink-0"><i class="fas fa-bed text-xs"></i></div>
+                                            <div>
+                                                <h4 class="text-sm font-bold text-white leading-tight">Nihil</h4>
+                                                <p class="text-xs text-slate-400 font-bold mt-0.5"><span id="legendaNihilVal">0 Orang</span> <span class="text-slate-600 font-normal mx-1">|</span> <span id="legendaNihilPct">0%</span></p>
                                             </div>
                                         </div>
                                     </div>
@@ -480,7 +476,7 @@
                                 </div>
                                 <div class="flex-1 text-center md:text-left">
                                     <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Tingkat kepatuhan SPJ bulan ini</p>
-                                    <h4 class="text-base sm:text-lg font-black text-white"><span id="bannerKepatuhanVal" class="text-indigo-400">0%</span> pegawai sudah melengkapi berkas</h4>
+                                    <h4 class="text-base sm:text-lg font-black text-white"><span id="bannerKepatuhanVal" class="text-indigo-400">0%</span> dari total pegawai telah LENGKAP</h4>
                                 </div>
                                 <div class="hidden md:block w-px h-12 bg-[#2E3B52]"></div>
                                 <div class="flex-1 text-center md:text-left text-xs text-slate-400 font-medium">
@@ -494,15 +490,12 @@
 
                         <!-- Row 3: Grafik Tren & Area (Diletakkan berdampingan) -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 tracking-print-hide">
-                            <!-- Panel Tren Kepatuhan -->
                             <div class="bg-brand-panel border border-brand-border rounded-2xl p-6 shadow-xl flex flex-col">
                                 <h3 class="font-bold text-white text-base mb-4">Tren Kepatuhan 6 Bulan Terakhir</h3>
                                 <div class="flex-1 relative w-full h-[220px]">
                                     <canvas id="trendChart"></canvas>
                                 </div>
                             </div>
-
-                            <!-- Area Chart Serapan -->
                             <div class="bg-brand-panel border border-brand-border rounded-2xl p-6 shadow-xl flex flex-col">
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="font-bold text-white text-base">Serapan SPJ Per Bulan (<span id="areaChartYearTitle">2026</span>)</h3>
@@ -512,42 +505,20 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Aksi Cepat (Bawah) -->
-                        <div class="bg-brand-panel border border-brand-border rounded-2xl p-5 shadow-xl tracking-print-hide">
-                            <h3 class="font-bold text-white text-sm mb-4">Aksi Cepat</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                <button onclick="printTracking()" class="bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/30 text-blue-400 rounded-xl p-3 flex items-center justify-center gap-2 transition-colors text-xs font-bold">
-                                    <i class="fas fa-print"></i> Cetak Bulan
-                                </button>
-                                <button onclick="exportToCSV()" class="bg-emerald-600/10 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-400 rounded-xl p-3 flex items-center justify-center gap-2 transition-colors text-xs font-bold">
-                                    <i class="fas fa-file-excel"></i> Laporan Excel
-                                </button>
-                                <button class="bg-purple-600/10 border border-purple-500/30 text-purple-400 rounded-xl p-3 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed text-xs font-bold">
-                                    <i class="fas fa-chart-pie"></i> Rekap Program
-                                </button>
-                                <button class="bg-amber-600/10 border border-amber-500/30 text-amber-400 rounded-xl p-3 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed text-xs font-bold">
-                                    <i class="fas fa-history"></i> Riwayat
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- TAB KONTEN 2: RINCIAN KELENGKAPAN BERKAS (PUBLIK TABLE) -->
                     <div id="pubDetailContent" class="hidden tracking-print-hide fade-in">
                         <div class="bg-brand-panel rounded-3xl shadow-2xl border border-brand-border overflow-hidden mt-2">
-                            <div class="p-6 border-b border-brand-border bg-[#1A2235]/30">
-                                <h3 class="font-extrabold text-white text-xl">Rincian Kelengkapan Berkas</h3>
-                                <p class="text-sm text-slate-400 mt-1">Cek kekurangan berkas dan catatan revisi SPJ Anda di sini.</p>
-                            </div>
-                            
-                            <!-- Filter di dalam tabel rincian -->
-                            <div class="p-4 border-b border-brand-border bg-[#1A2235]/10 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                            <div class="p-6 border-b border-brand-border bg-[#1A2235]/30 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                <div>
+                                    <h3 class="font-extrabold text-white text-xl">Rincian Kelengkapan Berkas</h3>
+                                    <p class="text-sm text-slate-400 mt-1">Cek kekurangan berkas dan catatan revisi SPJ Anda di sini.</p>
+                                </div>
                                 <div class="relative w-full sm:w-64">
                                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 text-xs"></i>
                                     <input type="text" id="publicSearchInput" placeholder="Cari nama pegawai..." class="w-full bg-[#0A0F1C] border border-brand-border text-white text-xs rounded-lg pl-8 pr-4 py-2 outline-none focus:border-blue-500 transition-all" oninput="renderDashboard()">
                                 </div>
-                                <div class="text-xs text-slate-400 font-medium">Menampilkan data berdasarkan periode yang dipilih di atas.</div>
                             </div>
 
                             <div class="overflow-x-auto">
@@ -570,12 +541,12 @@
                 </div>
             </main>
 
-            <!-- TAB 3: MASTER PEGAWAI (Admin Only) -->
+            <!-- TAB 3: DAFTAR PEGAWAI (Admin Only) -->
             <main id="tabPegawai" class="hidden absolute inset-0 overflow-y-auto p-4 sm:p-8 admin-only fade-in">
                 <div class="max-w-[1000px] mx-auto bg-brand-panel rounded-2xl shadow-xl border border-brand-border overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-700 to-blue-900 px-6 sm:px-8 py-5 flex justify-between items-center text-white border-b border-blue-500/30">
                         <div>
-                            <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-3"><i class="fas fa-users-cog opacity-80 text-blue-300"></i> Master Pegawai</h2>
+                            <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-3"><i class="fas fa-users-cog opacity-80 text-blue-300"></i> Daftar Pegawai</h2>
                             <p class="text-blue-200 text-xs mt-1">Kelola nama acuan resmi untuk form dan Dashboard.</p>
                         </div>
                         <div class="bg-[#0A0F1C]/50 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md shadow-inner">Total: <span id="masterPegawaiCount" class="text-lg text-blue-300 ml-1">0</span></div>
@@ -597,7 +568,33 @@
                             </div>
                             
                             <ul id="listMasterPegawai" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                                <!-- Render by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- TAB 4: DAFTAR PROGRAM (Admin Only) -->
+            <main id="tabProgram" class="hidden absolute inset-0 overflow-y-auto p-4 sm:p-8 admin-only fade-in">
+                <div class="max-w-[1000px] mx-auto bg-brand-panel rounded-2xl shadow-xl border border-brand-border overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-600 to-teal-800 px-6 sm:px-8 py-5 flex justify-between items-center text-white border-b border-emerald-500/30">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-3"><i class="fas fa-list-alt opacity-80 text-emerald-300"></i> Daftar Program BOK</h2>
+                            <p class="text-emerald-100 text-xs mt-1">Kelola daftar program beserta patokan anggaran standarnya.</p>
+                        </div>
+                        <div class="bg-[#0A0F1C]/50 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md shadow-inner">Total: <span id="masterProgramCount" class="text-lg text-emerald-300 ml-1">0</span></div>
+                    </div>
+
+                    <div class="p-5 sm:p-8">
+                        <form id="formMasterProgram" class="mb-8 flex flex-col md:flex-row gap-4 bg-[#0A0F1C] p-4 rounded-2xl border border-brand-border">
+                            <input type="text" id="inputNamaProgram" required placeholder="Nama Program..." class="flex-1 bg-brand-panel border border-brand-border rounded-xl px-5 py-3 focus:ring-1 focus:ring-emerald-500 text-sm outline-none text-white">
+                            <input type="number" id="inputAnggaranProgram" required placeholder="Anggaran (Rp)" class="w-full md:w-48 bg-brand-panel border border-brand-border rounded-xl px-5 py-3 focus:ring-1 focus:ring-emerald-500 text-sm outline-none text-white">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-xl shadow-[0_4px_15px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2 text-sm shrink-0"><i class="fas fa-plus"></i> Tambah</button>
+                        </form>
+
+                        <div>
+                            <h3 class="font-bold text-white text-base mb-4">Daftar Program Terdaftar</h3>
+                            <ul id="listMasterProgram" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                             </ul>
                         </div>
                     </div>
@@ -638,7 +635,8 @@
                 <h3 class="font-bold text-lg flex items-center gap-2" id="quickModalTitle"><i class="fas fa-edit text-blue-400"></i> Edit SPJ</h3>
                 <button onclick="closeQuickModal()" class="text-gray-400 hover:text-white transition-colors flex items-center justify-center"><i class="fas fa-times text-lg"></i></button>
             </div>
-            <div class="overflow-y-auto flex-1 custom-scrollbar">
+            <div class="overflow-y-auto flex-1 custom-scrollbar relative">
+                
                 <form id="quickForm" class="p-6 space-y-5">
                     <input type="hidden" id="quickId">
                     <input type="hidden" id="quickNamaHidden">
@@ -656,7 +654,9 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-400 mb-1.5">Program</label>
-                            <input type="text" id="quickProgram" list="listProgramDef" placeholder="Ketik/Pilih" class="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all bg-[#131A2B] border border-brand-border text-white focus:border-blue-500">
+                            <select id="quickProgram" class="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all bg-[#131A2B] border border-brand-border text-white focus:border-blue-500" onchange="syncAnggaranDariProgram(this, 'quickNominal')">
+                                <option value="">Pilih / Umum</option>
+                            </select>
                         </div>
                     </div>
                     
@@ -685,18 +685,48 @@
                         <button type="button" onclick="closeQuickModal()" class="w-1/3 bg-transparent border border-brand-border text-gray-400 py-3 rounded-xl font-bold text-sm hover:bg-white/5 transition-colors">Batal</button>
                         <button type="submit" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm shadow-[0_4px_15px_rgba(37,99,235,0.3)] flex justify-center items-center gap-2 transform active:scale-95 transition-all"><i class="fas fa-save"></i> Simpan Edit</button>
                     </div>
+                    
+                    <div id="btnTandaiNihilContainer" class="mt-4 pt-4 border-t border-brand-border">
+                        <button type="button" onclick="tandaiNihilDariModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold text-sm border border-slate-700 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-bed"></i> Tandai Bulan Ini NIHIL (Tidak Ada Kegiatan)
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- PUSAT LOGIKA & FIREBASE INTEGRASI -->
+    <!-- Modal PENGATURAN -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[120] flex items-center justify-center p-4">
+        <div class="absolute inset-0" onclick="closeSettingsModal()"></div>
+        <div class="relative bg-brand-panel rounded-2xl shadow-2xl w-full max-w-sm flex flex-col z-10 fade-in border border-brand-border overflow-hidden">
+            <div class="bg-[#0A0F1C] px-6 py-4 flex justify-between items-center text-white border-b border-brand-border">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-cog text-blue-400"></i> Pengaturan</h3>
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <button onclick="closeSettingsModal(); changePassword();" class="w-full bg-[#1A2235] border border-brand-border hover:border-blue-500 text-white py-3 px-4 rounded-xl text-sm font-bold flex items-center gap-3 transition-colors text-left">
+                    <i class="fas fa-lock text-blue-400 w-5"></i> Ubah Sandi Admin
+                </button>
+                <div class="h-px w-full bg-brand-border"></div>
+                <button onclick="backupData()" class="w-full bg-[#1A2235] border border-brand-border hover:border-emerald-500 text-white py-3 px-4 rounded-xl text-sm font-bold flex items-center gap-3 transition-colors text-left">
+                    <i class="fas fa-download text-emerald-400 w-5"></i> Backup Database
+                </button>
+                <button onclick="document.getElementById('restoreFileGlobal').click()" class="w-full bg-[#1A2235] border border-brand-border hover:border-amber-500 text-white py-3 px-4 rounded-xl text-sm font-bold flex items-center gap-3 transition-colors text-left">
+                    <i class="fas fa-upload text-amber-400 w-5"></i> Restore Database
+                </button>
+                <input type="file" id="restoreFileGlobal" accept=".json" class="hidden" onchange="closeSettingsModal(); restoreData(event)">
+            </div>
+        </div>
+    </div>
+
     <script>
         const daftarBerkasWajib = ['RILL', 'Surat Pernyataan', 'Surat Tugas', 'SPPD', 'Laporan', 'Foto'];
         const daftarBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         
         let dataBerkas = [];
         let masterPegawai = []; 
+        let masterProgram = []; // Data untuk Daftar Program BOK
         let dataNihil = []; 
         let currentView = 'matrix';
         let activeDetailPegawai = { nama: null, tahun: null }; 
@@ -715,7 +745,14 @@
 
         const escJS = (str) => (str || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-        // Fungsi Switch Tab dalam Dashboard Publik
+        // FUNGSI MODAL PENGATURAN
+        function openSettingsModal() { 
+            if(!isAdmin) return Swal.fire({title: 'Akses Ditolak', text: 'Login sebagai admin.', icon: 'error', background: '#131A2B', color: 'white'});
+            document.getElementById('settingsModal').classList.remove('hidden'); 
+        }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+        // FUNGSI TABS PUBLIK
         function switchPublicTab(tab) {
             const btnOverview = document.getElementById('btnPubTabOverview');
             const btnDetail = document.getElementById('btnPubTabDetail');
@@ -723,13 +760,13 @@
             const contentDetail = document.getElementById('pubDetailContent');
 
             if (tab === 'overview') {
-                btnOverview.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all';
-                btnDetail.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent';
+                btnOverview.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all whitespace-nowrap';
+                btnDetail.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent whitespace-nowrap';
                 contentOverview.classList.remove('hidden');
                 contentDetail.classList.add('hidden');
             } else {
-                btnDetail.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all';
-                btnOverview.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent';
+                btnDetail.className = 'pb-3 text-sm font-bold text-blue-400 border-b-2 border-blue-500 transition-all whitespace-nowrap';
+                btnOverview.className = 'pb-3 text-sm font-bold text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent whitespace-nowrap';
                 contentDetail.classList.remove('hidden');
                 contentOverview.classList.add('hidden');
             }
@@ -789,7 +826,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Force dark mode to match the design
             document.documentElement.classList.add('dark');
             
             const today = new Date();
@@ -809,6 +845,7 @@
             document.getElementById('checklistForm').addEventListener('submit', handleFormSubmit);
             document.getElementById('quickForm').addEventListener('submit', handleQuickSubmit);
             document.getElementById('formMasterPegawai').addEventListener('submit', handleAddMasterPegawai);
+            document.getElementById('formMasterProgram').addEventListener('submit', handleAddMasterProgram);
             ['searchInput', 'filterTahun'].forEach(id => { document.getElementById(id).addEventListener('input', renderTable); });
 
             const fbReady = await initFirebase();
@@ -819,26 +856,24 @@
                 setupRealtimeListeners();
             }
 
-            // Inisialisasi Chart Default (Color/Font)
             Chart.defaults.color = '#9CA3AF';
             Chart.defaults.font.family = 'Inter';
         });
 
         async function migrateLocalToFirebase() {
             if (!useFirebase || !currentUser) return;
-            const migratedFlag = localStorage.getItem('fb_migrated_v2_2');
+            const migratedFlag = localStorage.getItem('fb_migrated_v3_0');
             if (!migratedFlag) {
-                if (dataBerkas.length > 0) {
-                    dataBerkas.forEach(d => addOrUpdateBokRecord(d));
-                }
+                if (dataBerkas.length > 0) { dataBerkas.forEach(d => addOrUpdateBokRecord(d)); }
                 if (masterPegawai.length > 0) saveMasterData();
+                if (masterProgram.length > 0) saveMasterProgram();
                 if (dataNihil.length > 0) saveNihilData();
                 
                 const localPwd = localStorage.getItem('soLengkapPwd');
                 if (localPwd && localPwd !== 'admin') {
                     fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), { adminPassword: localPwd }, {merge: true});
                 }
-                localStorage.setItem('fb_migrated_v2_2', 'true');
+                localStorage.setItem('fb_migrated_v3_0', 'true');
             }
         }
 
@@ -852,10 +887,8 @@
                     snapshot.forEach(d => dataBerkas.push(d.data()));
                     updateFilterTahunOptions();
                     updateDashFilterTahun();
-                    
                     renderTable();
                     renderDashboard();
-                    
                     if(!document.getElementById('detailPegawaiModal').classList.contains('hidden') && activeDetailPegawai.nama) {
                         openDetailPegawai(activeDetailPegawai.nama, activeDetailPegawai.tahun);
                     }
@@ -868,18 +901,24 @@
                 (docSnap) => {
                     if (docSnap.exists()) {
                         masterPegawai = docSnap.data().names || [];
-                        
                         const currentSelect = document.getElementById('namaPegawai').value;
                         updateSelectPegawai();
-                        if (currentSelect && masterPegawai.includes(currentSelect)) {
-                            document.getElementById('namaPegawai').value = currentSelect;
-                        }
-                        
+                        if (currentSelect && masterPegawai.includes(currentSelect)) { document.getElementById('namaPegawai').value = currentSelect; }
                         renderMasterPegawai();
                         renderDashboard();
                     }
-                },
-                (error) => console.error("Firebase Master Error:", error)
+                }
+            );
+
+            fbOnSnapshot(
+                fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'),
+                (docSnap) => {
+                    if (docSnap.exists()) {
+                        masterProgram = docSnap.data().programs || [];
+                        renderMasterProgram();
+                        updateSelectProgram();
+                    }
+                }
             );
 
             fbOnSnapshot(
@@ -888,9 +927,9 @@
                     if (docSnap.exists()) {
                         dataNihil = docSnap.data().records || [];
                         renderDashboard();
+                        renderTable();
                     }
-                },
-                (error) => console.error("Firebase Nihil Error:", error)
+                }
             );
 
             fbOnSnapshot(
@@ -900,73 +939,50 @@
                         globalAdminPwd = docSnap.data().adminPassword;
                         localStorage.setItem('soLengkapPwd', globalAdminPwd);
                     }
-                },
-                (error) => console.error("Firebase Settings Error:", error)
+                }
             );
         }
 
         function addOrUpdateBokRecord(record) {
-            if(useFirebase && currentUser) {
-                fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record);
-            }
+            if(useFirebase && currentUser) { fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record); }
             saveDataLocal(); 
         }
 
         function deleteBokRecord(id) {
-            if(useFirebase && currentUser) {
-                fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', id));
-            }
+            if(useFirebase && currentUser) { fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', id)); }
             saveDataLocal();
         }
 
         function clearAllBokRecords() {
-            if(useFirebase && currentUser) {
-                dataBerkas.forEach(d => {
-                    fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id));
-                });
-            }
+            if(useFirebase && currentUser) { dataBerkas.forEach(d => { fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id)); }); }
             saveDataLocal();
         }
 
         function saveMasterData() { 
             localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai)); 
-            if(useFirebase && currentUser) {
-                fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), { names: masterPegawai });
-            }
+            if(useFirebase && currentUser) { fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), { names: masterPegawai }); }
+        }
+
+        function saveMasterProgram() { 
+            localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); 
+            if(useFirebase && currentUser) { fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), { programs: masterProgram }); }
         }
         
         function saveNihilData() { 
             localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); 
-            if(useFirebase && currentUser) {
-                fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), { records: dataNihil });
-            }
+            if(useFirebase && currentUser) { fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), { records: dataNihil }); }
         }
 
-        function saveDataLocal() { 
-            localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas)); 
-        }
+        function saveDataLocal() { localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas)); }
 
         function loadDataLocal() {
             const savedMaster = localStorage.getItem('bokMasterPegawai'); if(savedMaster) { try { masterPegawai = JSON.parse(savedMaster); } catch(e){} }
+            const savedProgram = localStorage.getItem('bokMasterProgram'); if(savedProgram) { try { masterProgram = JSON.parse(savedProgram); } catch(e){} }
             const nihilStr = localStorage.getItem('bokNihilV2'); if (nihilStr) { try { dataNihil = JSON.parse(nihilStr); } catch(e){} }
 
-            const v1Str = localStorage.getItem('bokChecklistData'); const v2Str = localStorage.getItem('bokChecklistV2');
-            let v1Data = []; let v2Data = [];
-            if (v1Str) { try { v1Data = JSON.parse(v1Str); } catch(e){} }
+            const v2Str = localStorage.getItem('bokChecklistV2');
+            let v2Data = [];
             if (v2Str) { try { v2Data = JSON.parse(v2Str); } catch(e){} }
-
-            if (v1Data.length > 0) {
-                const existingV2Ids = new Set(v2Data.map(d => d.id)); let hasMig = false;
-                v1Data.forEach(d => {
-                    const id = d.id || ('BOK_old_' + Math.random().toString(36).substr(2,9));
-                    if (!existingV2Ids.has(id)) {
-                        let yStr = d.tahun ? String(d.tahun) : new Date(d.tanggal).getFullYear().toString();
-                        v2Data.push({ id, namaPegawai: d.namaPegawai, tanggal: d.tanggal, bulan: d.bulan, tahun: yStr, program: 'Umum', nominal: 0, berkasDilengkapi: d.berkasDilengkapi || [], keterangan: d.keterangan || '', timestamp: d.timestamp });
-                        hasMig = true;
-                    }
-                });
-                if (hasMig) localStorage.setItem('bokChecklistV2', JSON.stringify(v2Data));
-            }
             dataBerkas = v2Data;
 
             if (dataBerkas.length > 0) {
@@ -980,14 +996,11 @@
                 if (masterUpdated) saveMasterData();
             }
             updateSelectPegawai();
+            updateSelectProgram();
+            renderMasterProgram();
         }
 
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('soLengkapTheme', isDark ? 'dark' : 'light');
-            renderDashboard();
-        }
+        function toggleDarkMode() { document.documentElement.classList.add('dark'); }
 
         function changePassword() {
             Swal.fire({
@@ -1007,7 +1020,6 @@
                     const oldP = Swal.getPopup().querySelector('#oldPwd').value;
                     const newP = Swal.getPopup().querySelector('#newPwd').value;
                     const confP = Swal.getPopup().querySelector('#confPwd').value;
-
                     if (!oldP || !newP || !confP) Swal.showValidationMessage(`Harap isi semua kolom`);
                     else if (oldP !== globalAdminPwd) Swal.showValidationMessage(`Sandi lama salah`);
                     else if (newP !== confP) Swal.showValidationMessage(`Sandi baru dan konfirmasi tidak cocok`);
@@ -1017,9 +1029,7 @@
                 if (result.isConfirmed) {
                     globalAdminPwd = result.value;
                     localStorage.setItem('soLengkapPwd', result.value);
-                    if(useFirebase && currentUser) {
-                        fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), { adminPassword: result.value }, {merge: true});
-                    }
+                    if(useFirebase && currentUser) { fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), { adminPassword: result.value }, {merge: true}); }
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Sandi admin telah diubah.', timer: 2000, showConfirmButton: false, background: '#131A2B', color: 'white' });
                 }
             });
@@ -1076,8 +1086,8 @@
                 if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
             }
 
-            ['tabData', 'tabDashboard', 'tabPegawai'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            ['btnTabData', 'btnTabDashboard', 'btnTabPegawai'].forEach(id => {
+            ['tabData', 'tabDashboard', 'tabPegawai', 'tabProgram'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['btnTabData', 'btnTabDashboard', 'btnTabPegawai', 'btnTabProgram'].forEach(id => {
                 const btn = document.getElementById(id);
                 if(btn) {
                     btn.classList.remove('bg-blue-600', 'text-white', 'shadow-[0_4px_15px_rgba(37,99,235,0.3)]');
@@ -1089,28 +1099,24 @@
             const inactiveBtnClass = ['text-gray-400'];
 
             if(tabId === 'data') {
-                document.getElementById('tabData').classList.remove('hidden');
-                document.getElementById('tabData').classList.add('flex');
-                document.getElementById('btnTabData').classList.remove(...inactiveBtnClass);
-                document.getElementById('btnTabData').classList.add(...activeBtnClass);
+                document.getElementById('tabData').classList.remove('hidden'); document.getElementById('tabData').classList.add('flex');
+                document.getElementById('btnTabData').classList.remove(...inactiveBtnClass); document.getElementById('btnTabData').classList.add(...activeBtnClass);
                 renderTable();
             } else if (tabId === 'dashboard') {
-                document.getElementById('tabDashboard').classList.remove('hidden');
-                document.getElementById('tabDashboard').classList.add('block');
+                document.getElementById('tabDashboard').classList.remove('hidden'); document.getElementById('tabDashboard').classList.add('block');
                 const btn = document.getElementById('btnTabDashboard');
-                if(btn) {
-                    btn.classList.remove(...inactiveBtnClass);
-                    btn.classList.add(...activeBtnClass);
-                }
-                
+                if(btn) { btn.classList.remove(...inactiveBtnClass); btn.classList.add(...activeBtnClass); }
                 switchPublicTab('overview');
                 renderDashboard();
             } else if (tabId === 'pegawai') {
-                document.getElementById('tabPegawai').classList.remove('hidden');
-                document.getElementById('tabPegawai').classList.add('block');
-                document.getElementById('btnTabPegawai').classList.remove(...inactiveBtnClass);
-                document.getElementById('btnTabPegawai').classList.add(...activeBtnClass);
+                document.getElementById('tabPegawai').classList.remove('hidden'); document.getElementById('tabPegawai').classList.add('block');
+                document.getElementById('btnTabPegawai').classList.remove(...inactiveBtnClass); document.getElementById('btnTabPegawai').classList.add(...activeBtnClass);
                 renderMasterPegawai();
+            } else if (tabId === 'program') {
+                document.getElementById('tabProgram').classList.remove('hidden'); document.getElementById('tabProgram').classList.add('block');
+                const btn = document.getElementById('btnTabProgram');
+                if(btn) { btn.classList.remove(...inactiveBtnClass); btn.classList.add(...activeBtnClass); }
+                renderMasterProgram();
             }
         }
 
@@ -1140,11 +1146,9 @@
         function styleCheckbox(cb) {
             const l = cb.closest('.chk-label');
             if (cb.checked) { 
-                l.classList.add('bg-blue-900/20', 'border-blue-500/50'); 
-                l.classList.remove('bg-[#0A0F1C]', 'border-brand-border'); 
+                l.classList.add('bg-blue-900/20', 'border-blue-500/50'); l.classList.remove('bg-[#0A0F1C]', 'border-brand-border'); 
             } else { 
-                l.classList.remove('bg-blue-900/20', 'border-blue-500/50'); 
-                l.classList.add('bg-[#0A0F1C]', 'border-brand-border'); 
+                l.classList.remove('bg-blue-900/20', 'border-blue-500/50'); l.classList.add('bg-[#0A0F1C]', 'border-brand-border'); 
             }
         }
         function toggleCheckAll(name, isChecked) { document.querySelectorAll(`input[name="${name}"]`).forEach(cb => { cb.checked = isChecked; styleCheckbox(cb); }); }
@@ -1166,16 +1170,66 @@
             masterPegawai.forEach(nama => html += `<option value="${nama}">${nama}</option>`);
             select.innerHTML = html;
         }
+        
+        function updateSelectProgram() {
+            const selMain = document.getElementById('program');
+            const selQuick = document.getElementById('quickProgram');
+            let html = '<option value="">Pilih Program (Umum)</option>';
+            masterProgram.forEach(p => { html += `<option value="${p.nama}" data-anggaran="${p.anggaran}">${p.nama}</option>`; });
+            if(selMain) selMain.innerHTML = html;
+            if(selQuick) selQuick.innerHTML = html;
+        }
 
+        function syncAnggaranDariProgram(selectEl, targetId = 'nominal') {
+            const tgt = document.getElementById(targetId);
+            if(selectEl.selectedIndex > 0) {
+                tgt.value = selectEl.options[selectEl.selectedIndex].getAttribute('data-anggaran') || '';
+            }
+        }
+
+        // --- MANAJEMEN PROGRAM ---
+        function handleAddMasterProgram(e) {
+            e.preventDefault();
+            const nama = document.getElementById('inputNamaProgram').value.trim();
+            const anggaran = parseFloat(document.getElementById('inputAnggaranProgram').value) || 0;
+            if (masterProgram.some(p => p.nama.toLowerCase() === nama.toLowerCase())) return Swal.fire({title:'Info', text:'Program sudah ada.', icon:'info', background:'#131A2B', color:'white'});
+            masterProgram.push({ id: 'PRG_'+Date.now(), nama, anggaran });
+            document.getElementById('formMasterProgram').reset();
+            saveMasterProgram(); updateSelectProgram(); renderMasterProgram();
+            Swal.fire({icon: 'success', title: 'Tersimpan', toast: true, position: 'top-end', timer: 1000, showConfirmButton: false, background: '#131A2B', color: 'white'});
+        }
+
+        function hapusMasterProgram(id) {
+            Swal.fire({ title: `Hapus Program?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya', background: '#131A2B', color: 'white' }).then(res => {
+                if(res.isConfirmed) { 
+                    masterProgram = masterProgram.filter(p => p.id !== id); 
+                    saveMasterProgram(); updateSelectProgram(); renderMasterProgram(); 
+                }
+            });
+        }
+
+        function renderMasterProgram() {
+            const list = document.getElementById('listMasterProgram');
+            document.getElementById('masterProgramCount').textContent = masterProgram.length;
+            if (masterProgram.length === 0) { list.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500 text-sm">Belum ada program.</div>`; return; }
+            list.innerHTML = masterProgram.map((p, idx) => `
+                <li class="bg-brand-panel p-4 rounded-2xl border border-brand-border flex justify-between items-center shadow-sm">
+                    <div>
+                        <span class="font-bold text-white text-sm block">${p.nama}</span>
+                        <span class="text-xs text-emerald-400 font-bold">${formatRp(p.anggaran)}</span>
+                    </div>
+                    <button type="button" onclick="hapusMasterProgram('${p.id}')" class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
+                </li>`).join('');
+        }
+
+        // --- MANAJEMEN PEGAWAI ---
         function handleAddMasterPegawai(e) {
             e.preventDefault();
             const input = document.getElementById('inputMasterPegawai');
             let nama = input.value.trim();
             nama = nama.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-            
             if (masterPegawai.some(m => m.toLowerCase() === nama.toLowerCase())) return Swal.fire({title:'Info', text:'Nama ini sudah ada di Master Data.', icon:'info', background:'#131A2B', color:'white'});
             masterPegawai.push(nama); input.value = '';
-            
             saveMasterData(); updateSelectPegawai(); renderMasterPegawai();
             Swal.fire({icon: 'success', title: 'Tersimpan', toast: true, position: 'top-end', timer: 1000, showConfirmButton: false, background: '#131A2B', color: 'white'});
         }
@@ -1198,7 +1252,10 @@
                 if (res.isConfirmed) {
                     let newName = res.value.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                     if (newName === oldName) return;
-                    if (masterPegawai.some(m => m.toLowerCase() === newName.toLowerCase())) return Swal.fire({title:'Info', text:'Nama sudah ada.', icon:'info', background:'#131A2B', color:'white'});
+                    
+                    if (newName.toLowerCase() !== oldName.toLowerCase() && masterPegawai.some(m => m.toLowerCase() === newName.toLowerCase())) {
+                        return Swal.fire({title:'Info', text:'Nama sudah ada.', icon:'info', background:'#131A2B', color:'white'});
+                    }
 
                     const idx = masterPegawai.indexOf(oldName); if (idx !== -1) masterPegawai[idx] = newName;
                     
@@ -1271,6 +1328,7 @@
             document.getElementById('checklistForm').reset();
             document.getElementById('tanggal').valueAsDate = new Date();
             document.getElementById('checkAllMain').checked = false; toggleCheckAll('berkas', false);
+            document.getElementById('program').selectedIndex = 0;
         }
 
         function updateFilterTahunOptions() {
@@ -1307,7 +1365,12 @@
                 });
 
                 let arrPegawai = Object.values(pegawaiMap).filter(p => p.nama.toLowerCase().includes(qSearch));
-                arrPegawai.sort((a, b) => a.nama.localeCompare(b.nama));
+                if(isPublicMode && qSearch === "") {
+                    arrPegawai = masterPegawai.map(n => pegawaiMap[n.toLowerCase()] || {nama: n, totalNominal:0, bulan: {}}).sort((a,b)=>a.nama.localeCompare(b.nama));
+                } else {
+                    arrPegawai.sort((a, b) => a.nama.localeCompare(b.nama));
+                }
+                
                 count = arrPegawai.length;
 
                 arrPegawai.forEach(p => {
@@ -1317,6 +1380,8 @@
                     
                     daftarBulan.forEach(m => {
                         const items = p.bulan[m];
+                        const isNihil = dataNihil.some(n => n.namaPegawai === p.nama && n.bulan === m && String(n.tahun) === String(qTahun));
+                        
                         if (items && items.length > 0) {
                             const total = items.length; let lengkap = 0;
                             let sortedItems = [...items].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
@@ -1354,12 +1419,14 @@
                             
                             let bulkCompleteBtn = '';
                             if (persen < 100 && !isPublicMode) {
-                                bulkCompleteBtn = `<button onclick="event.stopPropagation(); bulkCompleteBulan('${safeName}', '${qTahun}', '${m}')" class="absolute top-1 right-1 w-5 h-5 bg-emerald-500 hover:bg-emerald-400 text-white rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_rgba(16,185,129,0.8)] z-10" title="Tandai Semua Lengkap di Bulan Ini"><i class="fas fa-check-double text-[10px]"></i></button>`;
+                                bulkCompleteBtn = `<button onclick="event.stopPropagation(); bulkCompleteBulan('${safeName}', '${qTahun}', '${m}')" class="absolute top-1 right-1 w-5 h-5 bg-emerald-500 hover:bg-emerald-400 text-white rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_rgba(16,185,129,0.8)] z-10" title="Edit Masal Bulan Ini"><i class="fas fa-check-double text-[10px]"></i></button>`;
                             }
 
                             gridHtml += `<div ${!isPublicMode ? `onclick="openDetailPegawai('${safeName}', '${qTahun}')"` : ''} class="${!isPublicMode?'cursor-pointer hover:border-white/30 group':''} border rounded-xl flex flex-col items-center justify-start py-2 px-1 relative transition-all ${bgClass} min-h-[60px]">
                                 ${bulkCompleteBtn}
                                 <span class="text-[9px] font-bold text-gray-400 uppercase mb-1.5">${m.substring(0,3)}</span><div class="flex flex-wrap justify-center gap-1 w-full">${datesHtml}</div></div>`;
+                        } else if (isNihil) {
+                            gridHtml += `<div ${!isPublicMode ? `onclick="openQuickModal('', '${safeName}', '${m}', '${qTahun}')"` : ''} class="${!isPublicMode?'cursor-pointer hover:bg-white/5':''} border border-slate-700 bg-slate-800/80 rounded-xl flex items-center justify-center p-1.5 opacity-90 min-h-[60px] transition-colors"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nihil</span></div>`;
                         } else {
                             gridHtml += `<div ${!isPublicMode ? `onclick="openQuickModal('', '${safeName}', '${m}', '${qTahun}')"` : ''} class="${!isPublicMode?'cursor-pointer hover:bg-white/5':''} border border-dashed border-brand-border bg-[#0A0F1C]/50 rounded-xl flex items-center justify-center p-1.5 opacity-60 min-h-[60px] transition-colors"><span class="text-[9px] font-bold text-gray-500">${m.substring(0,3)}</span></div>`;
                         }
@@ -1374,7 +1441,7 @@
                         else contentHtml += `<div class="flex flex-wrap gap-1.5 mb-2">${Object.keys(missingCounts).map(k => `<span class="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] px-2 py-0.5 rounded shadow-sm font-semibold">${k}: ${missingCounts[k]}x</span>`).join('')}</div>`;
                         
                         const uniqueNotes = Object.values(noteCounts);
-                        if (uniqueNotes.length > 0) contentHtml += `<div class="flex flex-col gap-1.5 pt-1">${uniqueNotes.map(n => `<div class="text-[10px] text-orange-300 bg-orange-500/10 border border-orange-500/20 px-2 py-1.5 rounded-md shadow-sm leading-tight flex gap-1.5"><i class="fas fa-comment-dots mt-0.5 opacity-70"></i> <span>${escJS(n.text)} <span class="opacity-60 ml-1">(${n.count}x)</span></span></div>`).join('')}</div>`;
+                        if (uniqueNotes.length > 0) contentHtml += `<div class="flex flex-col gap-1.5 pt-1">${uniqueNotes.map(n => `<div class="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 rounded-md shadow-sm leading-tight flex gap-1.5"><i class="fas fa-comment-dots mt-0.5 opacity-70"></i> <span>${escJS(n.text)} <span class="opacity-60 ml-1">(${n.count}x)</span></span></div>`).join('')}</div>`;
                         missingHtml = `<div>${contentHtml}</div>`;
                     }
 
@@ -1410,7 +1477,7 @@
                         </td>
                         <td class="p-4 align-top">
                             ${isComplete ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-1 rounded-md font-bold uppercase shadow-sm inline-block"><i class="fas fa-check mr-1"></i> Lengkap</span>` : `<span class="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] px-2 py-1 rounded-md font-bold uppercase mb-1 shadow-sm inline-block"><i class="fas fa-times mr-1"></i> Kurang Berkas</span><div class="text-[10px] text-red-300/70 font-medium leading-tight">Kurang: ${missing.join(', ')}</div>`}
-                            ${item.keterangan ? `<div class="text-[10px] text-orange-300 bg-orange-500/10 p-2 border border-orange-500/20 rounded-md mt-2 shadow-sm"><i class="fas fa-comment-dots mr-1"></i> ${escJS(item.keterangan)}</div>` : ''}
+                            ${item.keterangan ? `<div class="text-[10px] text-amber-300 bg-amber-500/10 p-2 border border-amber-500/20 rounded-md mt-2 shadow-sm"><i class="fas fa-comment-dots mr-1"></i> ${escJS(item.keterangan)}</div>` : ''}
                         </td>
                         <td class="p-4 text-center align-middle print:hidden">
                             <div class="flex items-center justify-center gap-2">
@@ -1425,92 +1492,57 @@
         }
 
         function bulkCompleteBulan(nama, tahun, bulan) {
+            let optionsHTML = '<option value="">(Tidak Diubah)</option>';
+            masterProgram.forEach(p => { optionsHTML += `<option value="${p.nama}">${p.nama}</option>`; });
+
+            let checksHTML = daftarBerkasWajib.map(b => `<label class="flex items-center gap-2"><input type="checkbox" value="${b}" class="swal-cb-masal checked:bg-emerald-500 w-4 h-4 rounded bg-[#0A0F1C] border-[#1E293B]" checked> <span class="text-xs">${b}</span></label>`).join('');
+
             Swal.fire({
-                title: 'Lengkapi Semua Berkas?',
-                text: `Sistem akan menandai seluruh data berkas ${nama} di bulan ${bulan} menjadi LENGKAP dan menghapus semua catatan revisi. Lanjutkan?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Lengkapi',
-                cancelButtonText: 'Batal',
-                background: '#131A2B', color: 'white', confirmButtonColor: '#10B981'
+                title: `Edit Masal ${bulan}`,
+                html: `
+                    <div class="text-left space-y-4 mt-2">
+                        <div><label class="text-xs text-gray-400 block mb-1">Set Program Sama:</label><select id="swalProg" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-white p-2 rounded text-sm">${optionsHTML}</select></div>
+                        <div><label class="text-xs text-gray-400 block mb-1">Set Anggaran Sama (Rp):</label><input type="number" id="swalNom" placeholder="Kosongkan jika tidak diubah" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-white p-2 rounded text-sm"></div>
+                        <div><label class="text-xs text-gray-400 block mb-2">Tandai Berkas Lengkap:</label><div class="grid grid-cols-2 gap-2">${checksHTML}</div></div>
+                        <div><label class="text-xs text-gray-400 block mb-1">Set Catatan Sama:</label><input type="text" id="swalCat" placeholder="Ketik catatan..." class="w-full bg-[#0A0F1C] border border-[#1E293B] text-white p-2 rounded text-sm"></div>
+                    </div>
+                `,
+                showCancelButton: true, confirmButtonText: 'Terapkan Semua', cancelButtonText: 'Batal',
+                background: '#131A2B', color: 'white', confirmButtonColor: '#10B981',
+                preConfirm: () => {
+                    return {
+                        program: document.getElementById('swalProg').value,
+                        nominal: document.getElementById('swalNom').value,
+                        berkas: Array.from(document.querySelectorAll('.swal-cb-masal:checked')).map(cb => cb.value),
+                        catatan: document.getElementById('swalCat').value
+                    }
+                }
             }).then(res => {
                 if (res.isConfirmed) {
                     let updated = false;
                     dataBerkas.forEach(d => {
                         if (d.namaPegawai === nama && String(d.tahun) === String(tahun) && d.bulan === bulan) {
-                            d.berkasDilengkapi = [...daftarBerkasWajib];
-                            d.keterangan = '';
-                            if(useFirebase && currentUser) {
-                                fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id), d);
-                            }
+                            if(res.value.program) d.program = res.value.program;
+                            if(res.value.nominal) d.nominal = parseFloat(res.value.nominal);
+                            if(res.value.catatan !== undefined && res.value.catatan !== "") d.keterangan = res.value.catatan;
+                            else if (res.value.catatan === "" && d.keterangan) d.keterangan = "";
+                            
+                            d.berkasDilengkapi = res.value.berkas;
+
+                            if(useFirebase && currentUser) { fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id), d); }
                             updated = true;
                         }
                     });
 
                     if (updated) {
                         saveDataLocal(); renderTable(); renderDashboard();
-                        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Semua berkas di bulan tersebut telah dilengkapi.', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false, background: '#131A2B', color: 'white' });
+                        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data masal diterapkan.', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false, background: '#131A2B', color: 'white' });
                     }
                 }
             });
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('dataTableBody');
-            const thead = document.getElementById('dataTableHead');
-            const emptyState = document.getElementById('emptyState');
-            const tableEl = document.getElementById('mainTableElement');
-            const qSearch = document.getElementById('searchInput').value.toLowerCase();
-            let qTahun = document.getElementById('filterTahun').value;
-
-            if (!qTahun && dataBerkas.length > 0) {
-                const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a);
-                qTahun = years[0];
-            }
-
-            let filteredData = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
-            
-            if (filteredData.length === 0 && dataBerkas.length > 0) {
-                qTahun = dataBerkas[dataBerkas.length-1].tahun;
-                document.getElementById('filterTahun').value = qTahun;
-                filteredData = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
-            }
-
-            const totalAnggaran = filteredData.reduce((sum, item) => sum + (Number(item.nominal) || 0), 0);
-            document.getElementById('totalNominalFooter').textContent = formatRp(totalAnggaran);
-
-            if (currentView === 'matrix') {
-                document.getElementById('textTotalPrefix').textContent = 'Pegawai';
-                thead.innerHTML = `<tr>
-                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-1/5 min-w-[200px]">Info Pegawai</th>
-                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Rekapitulasi per Bulan</th>
-                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-1/4 min-w-[250px]">Kekurangan & Revisi</th>
-                </tr>`;
-            } else {
-                document.getElementById('textTotalPrefix').textContent = 'Riwayat';
-                thead.innerHTML = `<tr>
-                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Tgl & Prog</th>
-                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Nama Pegawai</th>
-                    <th class="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-1/3">Status Berkas</th>
-                    <th class="p-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider print:hidden">Aksi</th>
-                </tr>`;
-            }
-
-            const { html, count } = generateTableRowsHTML(filteredData, qSearch, qTahun, false);
-            tbody.innerHTML = html;
-            document.getElementById('totalDataCount').textContent = count;
-
-            if (count === 0) { 
-                emptyState.classList.remove('hidden'); emptyState.classList.add('flex'); 
-                if(tableEl) tableEl.classList.add('hidden'); 
-            } else { 
-                emptyState.classList.add('hidden'); emptyState.classList.remove('flex'); 
-                if(tableEl) tableEl.classList.remove('hidden'); 
-            }
-        }
-
-        // --- DASHBOARD LOGIC (DENGAN DONUT CHART BARU) ---
-
+        // --- DASHBOARD LOGIC ---
         function renderDashboard() {
             let y = document.getElementById('dashFilterTahun').value;
             if (!y && dataBerkas.length > 0) {
@@ -1523,7 +1555,6 @@
             const dSet = dataBerkas.filter(d => String(d.tahun) === String(y));
             document.getElementById('areaChartYearTitle').textContent = y;
 
-            // Hitung 4 Kartu Atas
             const totalAnggaran = dSet.reduce((s, d) => s + (Number(d.nominal)||0), 0);
             document.getElementById('dashTotalDana').textContent = formatRp(totalAnggaran);
             
@@ -1532,17 +1563,21 @@
             document.getElementById('dashTotalPegawaiVal').innerHTML = `${totalTarget} <span class="text-sm font-normal text-gray-400">Orang</span>`;
             document.getElementById('donutTotalVal').textContent = totalTarget;
 
-            // Logika Status 3 Kategori (Menghitung by Pegawai berdasarkan Master Data)
             let lengkapCount = 0;
             let kurangCount = 0;
             let belumAdaCount = 0;
+            let nihilCount = 0;
 
             masterPegawai.forEach(nama => {
                 const pData = dBulan.filter(d => d.namaPegawai === nama);
+                const isNihil = dataNihil.some(n => n.namaPegawai === nama && n.bulan === activeBulan && String(n.tahun) === String(y));
+
                 if (pData.length > 0) {
                     const isLengkapAll = pData.every(d => d.berkasDilengkapi.length === daftarBerkasWajib.length);
                     if (isLengkapAll) lengkapCount++;
                     else kurangCount++;
+                } else if (isNihil) {
+                    nihilCount++;
                 } else {
                     belumAdaCount++;
                 }
@@ -1550,16 +1585,18 @@
 
             const totalMenyetor = lengkapCount + kurangCount;
 
-            // Update Top Cards
             document.getElementById('dashSudahMenyetor').innerHTML = `${totalMenyetor} <span class="text-sm font-normal text-gray-400">Orang</span>`;
             document.getElementById('dashBelumMenyetor').innerHTML = `${belumAdaCount} <span class="text-sm font-normal text-gray-400">Orang</span>`;
+            document.getElementById('dashNihil').innerHTML = `${nihilCount} <span class="text-sm font-normal text-gray-400">Orang</span>`;
             
             const pSudahSetor = totalTarget > 0 ? Math.round((totalMenyetor / totalTarget)*100) : 0;
             const pBelumSetor = totalTarget > 0 ? Math.round((belumAdaCount / totalTarget)*100) : 0;
+            const pNihilSetor = totalTarget > 0 ? Math.round((nihilCount / totalTarget)*100) : 0;
+            
             document.getElementById('dashPersenSudah').innerHTML = `${pSudahSetor}% <span class="text-gray-500 font-normal">dari total pegawai</span>`;
             document.getElementById('dashPersenBelum').innerHTML = `${pBelumSetor}% <span class="text-gray-500 font-normal">dari total pegawai</span>`;
+            document.getElementById('dashPersenNihil').innerHTML = `${pNihilSetor}% <span class="text-gray-500 font-normal">Tidak ada kegiatan</span>`;
 
-            // Update Panel Baru
             const pLengkap = totalTarget > 0 ? Math.round((lengkapCount / totalTarget) * 100) : 0;
             const pKurang = totalTarget > 0 ? Math.round((kurangCount / totalTarget) * 100) : 0;
             const pKosong = totalTarget > 0 ? Math.round((belumAdaCount / totalTarget) * 100) : 0;
@@ -1573,6 +1610,9 @@
             document.getElementById('legendaKosongVal').textContent = `${belumAdaCount} Orang`;
             document.getElementById('legendaKosongPct').textContent = `${pKosong}%`;
 
+            document.getElementById('legendaNihilVal').textContent = `${nihilCount} Orang`;
+            document.getElementById('legendaNihilPct').textContent = `${pNihilSetor}%`;
+
             document.getElementById('cardLengkapValNum').textContent = lengkapCount;
             document.getElementById('cardLengkapPctText').textContent = `${pLengkap}%`;
             document.getElementById('cardLengkapBarLine').style.width = `${pLengkap}%`;
@@ -1583,17 +1623,16 @@
 
             document.getElementById('bannerKepatuhanVal').textContent = `${pLengkap}%`;
 
-            // Update Doughnut Chart Khusus
             const ctxDoughnut = document.getElementById('statusDoughnutChart');
             if(ctxDoughnut) {
                 if(window.statusDoughnutChartInstance) window.statusDoughnutChartInstance.destroy();
                 window.statusDoughnutChartInstance = new Chart(ctxDoughnut, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Lengkap', 'Belum Lengkap', 'Belum Ada'],
+                        labels: ['Lengkap', 'Belum Lengkap', 'Belum Masuk', 'Nihil'],
                         datasets: [{
-                            data: [lengkapCount, kurangCount, belumAdaCount],
-                            backgroundColor: ['#10B981', '#F59E0B', '#8B5CF6'],
+                            data: [lengkapCount, kurangCount, belumAdaCount, nihilCount],
+                            backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#64748B'],
                             borderWidth: 0,
                             cutout: '75%',
                             borderRadius: 10
@@ -1601,19 +1640,14 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { display: false },
-                            tooltip: { backgroundColor: '#131A2B', titleColor: '#fff', bodyColor: '#fff', borderColor: '#1E293B', borderWidth: 1 } 
-                        }
+                        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#131A2B', titleColor: '#fff', bodyColor: '#fff', borderColor: '#1E293B', borderWidth: 1 } }
                     }
                 });
             }
 
-            // --- CHART TREN KEPATUHAN (6 Bulan) ---
             const ctxTrend = document.getElementById('trendChart');
             if(ctxTrend) {
                 if(window.trendChartInstance) window.trendChartInstance.destroy();
-                
                 let currentMonthIndex = daftarBulan.indexOf(activeBulan);
                 let trendLabels = [];
                 let trendData = [];
@@ -1637,23 +1671,17 @@
                         labels: trendLabels,
                         datasets: [{
                             label: 'Tingkat Kepatuhan (%)', data: trendData,
-                            borderColor: '#3B82F6', backgroundColor: '#3B82F6',
-                            borderWidth: 2, tension: 0.4,
+                            borderColor: '#3B82F6', backgroundColor: '#3B82F6', borderWidth: 2, tension: 0.4,
                             pointBackgroundColor: '#3B82F6', pointBorderColor: '#1A1D36', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
                         }]
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { display: false, drawBorder: false } },
-                            y: { min: 0, max: 100, ticks: { callback: v => v+'%' }, grid: { color: '#1E293B', borderDash: [5, 5] } }
-                        }
+                        responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false, drawBorder: false } }, y: { min: 0, max: 100, ticks: { callback: v => v+'%' }, grid: { color: '#1E293B', borderDash: [5, 5] } } }
                     }
                 });
             }
 
-            // --- CHART AREA SERAPAN PER BULAN ---
             const ctxArea = document.getElementById('areaChart');
             if(ctxArea) {
                 if(window.areaChartInstance) window.areaChartInstance.destroy();
@@ -1670,22 +1698,17 @@
                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
                         datasets: [{
                             label: 'Serapan (Rp)', data: areaData,
-                            borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            fill: true, borderWidth: 2, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#10B981', pointBorderColor: '#131A2B'
+                            borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, borderWidth: 2, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#10B981', pointBorderColor: '#131A2B'
                         }]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => formatRp(ctx.raw) } } },
-                        scales: {
-                            x: { grid: { display: false } },
-                            y: { grid: { color: '#1E293B' }, ticks: { callback: v => (v/1000000) >= 1 ? (v/1000000)+' jt' : (v/1000)+' k' } }
-                        }
+                        scales: { x: { grid: { display: false } }, y: { grid: { color: '#1E293B' }, ticks: { callback: v => (v/1000000) >= 1 ? (v/1000000)+' jt' : (v/1000)+' k' } } }
                     }
                 });
             }
 
-            // Update Tabel Publik Details di Tab sebelah
             const pbBody = document.getElementById('publicDataTableBody');
             if(pbBody) {
                 const searchPub = document.getElementById('publicSearchInput')?.value.toLowerCase() || '';
@@ -1696,6 +1719,29 @@
                 if(pubCount === 0) pbBody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-sm text-slate-500">Belum ada rincian data di tahun ini.</td></tr>`;
                 else pbBody.innerHTML = pubHtml;
             }
+        }
+
+        // FUNGSI TANDAI NIHIL DARI MODAL QUICK EDIT
+        function tandaiNihilDariModal() {
+            const nama = document.getElementById('quickNamaHidden').value;
+            const [bulan, tahun] = document.getElementById('quickPeriode').textContent.split(' ');
+            
+            Swal.fire({
+                title: `Tandai Nihil?`,
+                text: `${nama} tidak memiliki kegiatan pada bulan ${bulan} ${tahun}?`,
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#3B82F6', confirmButtonText: 'Ya, Nihil', background: '#131A2B', color: 'white'
+            }).then(res => {
+                if(res.isConfirmed) {
+                    const idNihil = 'NHL_' + Date.now();
+                    const newNihil = { id: idNihil, namaPegawai: nama, bulan, tahun };
+                    
+                    dataNihil = dataNihil.filter(n => !(n.namaPegawai === nama && n.bulan === bulan && String(n.tahun) === tahun));
+                    dataNihil.push(newNihil);
+                    
+                    saveNihilData(); closeQuickModal(); renderTable(); renderDashboard();
+                    Swal.fire({ icon: 'success', title: 'Ditandai Nihil', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false, background: '#131A2B', color: 'white' });
+                }
+            });
         }
 
         function printTracking() {
@@ -1804,8 +1850,8 @@
         }
 
         function backupData() {
-            if (dataBerkas.length === 0 && masterPegawai.length === 0 && dataNihil.length === 0) return Swal.fire({title:'Info', text:'Data kosong.', icon:'info', background:'#131A2B', color:'white'});
-            const exportData = { bok: dataBerkas, master: masterPegawai, nihil: dataNihil };
+            if (dataBerkas.length === 0 && masterPegawai.length === 0 && dataNihil.length === 0 && masterProgram.length === 0) return Swal.fire({title:'Info', text:'Data kosong.', icon:'info', background:'#131A2B', color:'white'});
+            const exportData = { bok: dataBerkas, master: masterPegawai, nihil: dataNihil, program: masterProgram };
             const link = document.createElement('a'); link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportData, null, 2));
             link.download = `Backup_DB_SoLengkap_${new Date().toISOString().split('T')[0]}.json`; link.click();
         }
@@ -1819,13 +1865,15 @@
                     let importedBOK = Array.isArray(imported) ? imported : (imported.bok || []);
                     let importedMaster = imported.master || [];
                     let importedNihil = imported.nihil || [];
+                    let importedProgram = imported.program || [];
 
                     Swal.fire({ title: 'Restore Data', text: "Pilih cara gabung", icon: 'question', showDenyButton: true, showCancelButton: true, confirmButtonText: 'Timpa Lama', denyButtonText: 'Gabung (Merge)', background: '#131A2B', color: 'white' }).then((res) => {
-                        if (res.isConfirmed) { dataBerkas = importedBOK; masterPegawai = importedMaster; dataNihil = importedNihil; finishRestore(); } 
+                        if (res.isConfirmed) { dataBerkas = importedBOK; masterPegawai = importedMaster; dataNihil = importedNihil; masterProgram = importedProgram; finishRestore(); } 
                         else if (res.isDenied) {
                             const existIds = new Set(dataBerkas.map(d => d.id)); importedBOK.forEach(i => { if(!existIds.has(i.id)) dataBerkas.push(i); });
                             const existMaster = new Set(masterPegawai.map(m=>m.toLowerCase())); importedMaster.forEach(m => { if(!existMaster.has(m.toLowerCase())) masterPegawai.push(m); });
                             const existNihil = new Set(dataNihil.map(n => n.id)); importedNihil.forEach(i => { if(!existNihil.has(i.id)) dataNihil.push(i); });
+                            const existProg = new Set(masterProgram.map(p => p.nama.toLowerCase())); importedProgram.forEach(p => { if(!existProg.has(p.nama.toLowerCase())) masterProgram.push(p); });
                             finishRestore();
                         }
                     });
@@ -1835,9 +1883,9 @@
         }
 
         function finishRestore() { 
-            saveDataLocal(); saveMasterData(); saveNihilData(); 
+            saveDataLocal(); saveMasterData(); saveNihilData(); saveMasterProgram();
             if (useFirebase && currentUser) { dataBerkas.forEach(d => addOrUpdateBokRecord(d)); }
-            updateFilterTahunOptions(); updateSelectPegawai(); renderTable(); 
+            updateFilterTahunOptions(); updateSelectPegawai(); updateSelectProgram(); renderTable(); 
             Swal.fire({title:'Sukses', text:'Data dipulihkan', icon:'success', background:'#131A2B', color:'white'}); 
         }
 
@@ -1865,6 +1913,9 @@
             });
             document.getElementById('checkAllQuick').checked = dilengkapi.length === daftarBerkasWajib.length && id !== '';
             
+            // Tampilkan atau sembunyikan tombol "Tandai Nihil" berdasarkan mode (baru atau edit)
+            document.getElementById('btnTandaiNihilContainer').style.display = id === '' ? 'block' : 'none';
+
             document.getElementById('quickModal').classList.remove('hidden');
         }
 
