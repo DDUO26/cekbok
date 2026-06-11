@@ -331,10 +331,10 @@
                                 <button id="btnViewList" onclick="setView('list')" class="px-4 py-2 text-xs font-bold rounded-lg text-gray-500 hover:text-white transition-all flex-1 sm:flex-none text-center"><i class="fas fa-list mr-1"></i> List</button>
                             </div>
                             <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                                <select id="filterTahun" class="rounded-xl text-sm font-bold py-2 px-3 outline-none flex-1 sm:w-28 cursor-pointer"></select>
+                                <select id="filterTahun" class="bg-[#0B0F19] text-white border border-brand-border focus:border-blue-500 rounded-xl text-sm font-bold py-2 px-3 outline-none flex-1 sm:w-28 cursor-pointer transition-colors"></select>
                                 <div class="relative flex-1 sm:w-48">
-                                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs"></i>
-                                    <input type="text" id="searchInput" placeholder="Cari..." class="rounded-xl pl-9 pr-3 py-2 text-sm w-full outline-none">
+                                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                                    <input type="text" id="searchInput" placeholder="Cari..." class="bg-[#0B0F19] text-white border border-brand-border focus:border-blue-500 rounded-xl pl-9 pr-3 py-2 text-sm w-full outline-none transition-colors">
                                 </div>
                                 <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition-all shrink-0" title="Export Excel"><i class="fas fa-file-excel"></i></button>
                             </div>
@@ -819,7 +819,14 @@
                 (docSnap) => {
                     if (docSnap.exists()) {
                         masterPegawai = docSnap.data().names || [];
+                        
+                        // Perbaikan UI: Caching nama terpilih sebelum dirender ulang agar tidak hilang di mode borongan
+                        const currentSelect = document.getElementById('namaPegawai').value;
                         updateSelectPegawai();
+                        if (currentSelect && masterPegawai.includes(currentSelect)) {
+                            document.getElementById('namaPegawai').value = currentSelect;
+                        }
+                        
                         renderMasterPegawai();
                         renderDashboard();
                     }
@@ -1193,14 +1200,21 @@
             dataNihil = dataNihil.filter(n => !(n.namaPegawai === namaPegawai && n.bulan === bulan && String(n.tahun) === tahun));
             saveNihilData(); 
             
-            updateFilterTahunOptions(); updateSelectPegawai();
+            // Simpan nama pegawai terpilih untuk dikembalikan setelah updateSelectPegawai
+            const currentSelectedName = document.getElementById('namaPegawai').value;
+            
+            updateFilterTahunOptions(); 
+            updateSelectPegawai();
+            
+            // Kembalikan nama pegawai
+            document.getElementById('namaPegawai').value = currentSelectedName;
+
             if(document.getElementById('filterTahun').value !== tahun) document.getElementById('filterTahun').value = tahun;
 
             if (document.getElementById('retainForm').checked) {
-                // Di Mode Borongan: Hanya reset Ceklis Berkas & Keterangan, sisanya (Nama, tgl, nominal) dipertahankan
+                // Di Mode Borongan: Hanya reset Ceklis Berkas, sisanya (Nama, tgl, catatan) dipertahankan
                 document.getElementById('checkAllMain').checked = false; 
                 toggleCheckAll('berkas', false);
-                document.getElementById('keterangan').value = '';
                 document.getElementById('tanggal').focus(); // Alihkan fokus untuk gampang diedit jika perlu
                 
                 Swal.fire({ icon: 'success', title: 'Tersimpan!', text:'Mode borongan aktif. Silakan lanjut.', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false, background: '#151A2D', color: 'white' });
