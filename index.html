@@ -828,16 +828,34 @@
                         let tglFormat = ''; if(tClean) { tglFormat = `${selectedTahun}-${mIndex}-${tClean.padStart(2, '0')}`; }
                         let pegClean = String(peg || '-').trim(); let desClean = String(desaSub || '').trim();
 
-                        if (pegClean !== '-' && !masterPegawai.some(m => m.nama.toLowerCase() === pegClean.toLowerCase())) {
-                            masterPegawai.push({nama: pegClean, status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: ''});
-                            newPegawai = true;
-                        }
+                        const daftarPetugas = pegClean
+                            .split(/[,;\n&]+/)
+                            .map(p => p.trim())
+                            .filter(Boolean);
+
                         if (desClean && !masterDesa.some(d => d.toLowerCase() === desClean.toLowerCase())) {
                             masterDesa.push(desClean);
                             newDesa = true;
                         }
 
-                        parsedData.push({ id: 'JDW_' + Date.now() + Math.random().toString(36).substr(2,5), kegiatan: currentKegiatan || namaK || 'Kegiatan Umum', desa: desClean, pegawai: pegClean, tanggal: tglFormat, dana: dana || 0, bulan: selectedBulan, tahun: selectedTahun }); 
+                        (daftarPetugas.length ? daftarPetugas : [pegClean]).forEach(namaPetugas => {
+
+                            if (namaPetugas !== '-' && !masterPegawai.some(m => m.nama.toLowerCase() === namaPetugas.toLowerCase())) {
+                                masterPegawai.push({nama: namaPetugas, status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: ''});
+                                newPegawai = true;
+                            }
+
+                            parsedData.push({
+                                id: 'JDW_' + Date.now() + Math.random().toString(36).substr(2,5),
+                                kegiatan: currentKegiatan || namaK || 'Kegiatan Umum',
+                                desa: desClean,
+                                pegawai: namaPetugas,
+                                tanggal: tglFormat,
+                                dana: dana || 0,
+                                bulan: selectedBulan,
+                                tahun: selectedTahun
+                            });
+                        }); 
                     }
                 });
                 
@@ -876,7 +894,7 @@
 
         function updateJadwalField(id, field, value) {
             const idx = dataJadwal.findIndex(j => j.id === id);
-            if(idx !== -1) { dataJadwal[idx][field] = value; saveJadwalData(); renderTable(); renderDashboard(); }
+            if(idx !== -1) { dataJadwal[idx][field] = value; saveJadwalData(); renderTable(); renderDashboard(); renderJadwal(); }
         }
 
         function hapusJadwalItem(id) { 
@@ -884,6 +902,52 @@
                 if(res.isConfirmed) { dataJadwal = dataJadwal.filter(p => p.id !== id); saveJadwalData(); renderJadwal(); renderTable(); renderDashboard(); } 
             }); 
         }
+        
+        // MODUL: POP-UP PEMILIHAN MULTI-PETUGAS
+        window.editPegawaiJadwal = function(id) {
+            const jadwal = dataJadwal.find(j => j.id === id);
+            if(!jadwal) return;
+            
+            const currentPegawai = (jadwal.pegawai || '').split(',').map(s=>s.trim()).filter(Boolean);
+            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left max-h-60 overflow-y-auto custom-scrollbar p-1">';
+            masterPegawai.filter(m => m.status !== 'mutasi').forEach(m => {
+                const checked = currentPegawai.includes(m.nama) ? 'checked' : '';
+                const bgClass = checked ? 'bg-blue-900/20 border-blue-500/50' : 'bg-[#0A0F1C] border-[#1E293B]';
+                
+                html += `<label class="flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-white/5 transition-colors chk-pegawai-label ${bgClass}">
+                    <input type="checkbox" class="swal-pegawai-cb hidden" value="${escJS(m.nama)}" ${checked} onchange="this.parentElement.classList.toggle('bg-blue-900/20', this.checked); this.parentElement.classList.toggle('border-blue-500/50', this.checked); this.parentElement.classList.toggle('bg-[#0A0F1C]', !this.checked); this.parentElement.classList.toggle('border-[#1E293B]', !this.checked);">
+                    <div class="w-4 h-4 rounded border border-gray-500 flex items-center justify-center bg-transparent checked-indicator shrink-0">
+                        <i class="fas fa-check text-[10px] text-white opacity-0 transition-opacity"></i>
+                    </div>
+                    <span class="text-xs text-gray-300 font-bold truncate leading-tight">${escJS(m.nama)}</span>
+                </label>`;
+            });
+            html += '</div>';
+            
+            html += `<style>
+                .swal-pegawai-cb:checked + .checked-indicator { background-color: #3B82F6 !important; border-color: #3B82F6 !important; }
+                .swal-pegawai-cb:checked + .checked-indicator i { opacity: 1 !important; }
+            </style>`;
+
+            Swal.fire({
+                title: '<span class="text-lg font-bold">Pilih Petugas (Bisa Lebih dari Satu)</span>',
+                html: html,
+                background: '#131A2B', color: 'white',
+                showCancelButton: true,
+                confirmButtonText: 'Simpan Pilihan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#2563EB',
+                width: '32em',
+                preConfirm: () => {
+                    const selected = Array.from(document.querySelectorAll('.swal-pegawai-cb:checked')).map(cb => cb.value);
+                    return selected.join(', '); // Save multiple with comma
+                }
+            }).then(res => {
+                if(res.isConfirmed) {
+                    updateJadwalField(id, 'pegawai', res.value);
+                }
+            });
+        };
 
         function renderJadwal() {
             const tbody = document.getElementById('jadwalTableBody'); const thead = document.getElementById('jadwalThead'); if(!tbody || !thead) return;
@@ -902,7 +966,7 @@
             
             let fJadwal = dataJadwal.filter(j => String(j.tahun) === String(tFilt));
 
-            thead.innerHTML = `<tr><th class="p-4 w-32">Tanggal</th><th class="p-4 w-1/3">Nama Kegiatan</th><th class="p-4">Desa/Lokasi</th><th class="p-4">Pegawai/Petugas</th><th class="p-4 text-right">Dana</th>${isAdmin ? '<th class="p-4 text-center">Aksi</th>' : ''}</tr>`;
+            thead.innerHTML = `<tr><th class="p-4 w-32">Tanggal</th><th class="p-4 w-1/3">Nama Kegiatan</th><th class="p-4">Desa/Lokasi</th><th class="p-4 w-1/4">Pegawai/Petugas</th><th class="p-4 text-right">Dana</th>${isAdmin ? '<th class="p-4 text-center">Aksi</th>' : ''}</tr>`;
             
             if(fJadwal.length === 0) { 
                 tbody.innerHTML = `<tr><td colspan="${isAdmin ? 6 : 5}" class="p-8 text-center text-gray-500 italic">Jadwal kegiatan tahun ${tFilt} belum tersedia. Silakan unggah file Excel/CSV.</td></tr>`; 
@@ -919,7 +983,6 @@
             });
 
             let html = ''; let gIdx = 0;
-            let optPegawai = `<option value="-">-</option>` + masterPegawai.filter(m => m.status !== 'mutasi').map(m => `<option value="${escJS(m.nama)}">${escJS(m.nama)}</option>`).join('');
             let optDesa = `<option value="">-</option>` + masterDesa.map(d => `<option value="${escJS(d)}">${escJS(d)}</option>`).join('');
 
             let sortedBulan = Object.keys(groupedByBulan).sort((a,b) => daftarBulan.indexOf(a) - daftarBulan.indexOf(b));
@@ -938,7 +1001,7 @@
                                 <td class="p-2 pl-14 align-top"><input type="date" value="${escJS(j.tanggal) || ''}" onchange="updateJadwalField('${j.id}', 'tanggal', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none [color-scheme:dark]"></td>
                                 <td class="p-2 align-top"><input type="text" value="${escJS(j.kegiatan) || ''}" onchange="updateJadwalField('${j.id}', 'kegiatan', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"></td>
                                 <td class="p-2 align-top"><select onchange="updateJadwalField('${j.id}', 'desa', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"><option value="${escJS(j.desa)}" selected hidden>${escJS(j.desa)}</option>${optDesa}</select></td>
-                                <td class="p-2 align-top"><select onchange="updateJadwalField('${j.id}', 'pegawai', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"><option value="${escJS(j.pegawai)}" selected hidden>${escJS(j.pegawai)}</option>${optPegawai}</select></td>
+                                <td class="p-2 align-top"><div onclick="editPegawaiJadwal('${j.id}')" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded cursor-pointer hover:border-blue-500 min-h-[30px] flex items-center justify-between transition-colors shadow-inner"><span class="truncate pr-2">${escJS(j.pegawai) || '- Pilih Petugas -'}</span><i class="fas fa-chevron-down text-[10px] text-gray-500 shrink-0"></i></div></td>
                                 <td class="p-2 align-top"><input type="number" value="${j.dana || ''}" onchange="updateJadwalField('${j.id}', 'dana', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none text-right"></td>
                                 <td class="p-2 align-top text-center"><button onclick="hapusJadwalItem('${j.id}')" class="w-7 h-7 rounded bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-colors mt-0.5"><i class="fas fa-trash text-xs"></i></button></td>
                             </tr>`;
@@ -997,7 +1060,18 @@
                         if (d.namaPegawai === oldName) { let upd = { ...d, namaPegawai: newName }; if(useFirebase && currentUser) { fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', upd.id), upd); } updatedBok = true; return upd; } return d;
                     });
                     dataNihil = dataNihil.map(n => n.namaPegawai === oldName ? { ...n, namaPegawai: newName } : n);
-                    dataJadwal = dataJadwal.map(j => j.pegawai === oldName ? { ...j, pegawai: newName } : j);
+                    
+                    // Patch untuk string koma pegawai jadwal
+                    dataJadwal = dataJadwal.map(j => {
+                        if (!j.pegawai) return j;
+                        let pList = j.pegawai.split(',').map(s=>s.trim());
+                        let changed = false;
+                        let newList = pList.map(p => {
+                            if (p === oldName) { changed = true; return newName; }
+                            return p;
+                        });
+                        return changed ? { ...j, pegawai: newList.join(', ') } : j;
+                    });
                     
                     saveMasterData(); saveNihilData(); saveJadwalData(); if(updatedBok) saveDataLocal();
                     
@@ -1080,10 +1154,16 @@
                 let combinedData = [...filteredData];
                 
                 jadwalTahunIni.forEach(j => {
-                    const hasBok = combinedData.some(d => d.namaPegawai === j.pegawai && d.tanggal === j.tanggal && !d.isDariJadwal);
-                    if (!hasBok && masterPegawai.some(m => m.nama === j.pegawai)) {
-                        combinedData.push({ id: '', namaPegawai: j.pegawai, tanggal: j.tanggal, bulan: j.bulan, tahun: j.tahun, program: j.kegiatan, nominal: j.dana, berkasDilengkapi: [], keterangan: 'Jadwal: Belum Di-SPJ-kan', isDariJadwal: true });
-                    }
+                    // Update array pegawai jika multiple select
+                    let pegawaiList = typeof j.pegawai === 'string' ? j.pegawai.split(',').map(s => s.trim()).filter(Boolean) : [];
+                    if (pegawaiList.length === 0) pegawaiList = ['-'];
+                    
+                    pegawaiList.forEach(peg => {
+                        const hasBok = combinedData.some(d => d.namaPegawai === peg && d.tanggal === j.tanggal && !d.isDariJadwal);
+                        if (!hasBok && masterPegawai.some(m => m.nama === peg)) {
+                            combinedData.push({ id: '', namaPegawai: peg, tanggal: j.tanggal, bulan: j.bulan, tahun: j.tahun, program: j.kegiatan, nominal: j.dana, berkasDilengkapi: [], keterangan: 'Jadwal: Belum Di-SPJ-kan', isDariJadwal: true });
+                        }
+                    });
                 });
 
                 combinedData.forEach(item => { const key = item.namaPegawai.toLowerCase(); if (!pegawaiMap[key]) pegawaiMap[key] = { obj: {nama: item.namaPegawai, status: 'aktif', catatanUmum: ''}, nama: item.namaPegawai, totalNominal: 0, bulan: {} }; if (!pegawaiMap[key].bulan[item.bulan]) pegawaiMap[key].bulan[item.bulan] = []; pegawaiMap[key].bulan[item.bulan].push(item); if(!item.isDariJadwal) pegawaiMap[key].totalNominal += (Number(item.nominal) || 0); });
