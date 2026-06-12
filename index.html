@@ -1364,6 +1364,76 @@
             const modal = document.getElementById('detailPegawaiModal'); if(modal) modal.classList.remove('hidden');
         }
         function closeDetailPegawai() { const el = document.getElementById('detailPegawaiModal'); if(el) el.classList.add('hidden'); }
-    </script>
+    
+        // === PATCH D.DUO : Backup & Restore Fix ===
+        function backupData() {
+            try {
+                const backup = {
+                    version: "1.1.5-fixed",
+                    createdAt: new Date().toISOString(),
+                    dataBerkas,
+                    masterPegawai,
+                    masterProgram,
+                    masterDesa,
+                    dataNihil,
+                    dataJadwal
+                };
+
+                const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'BOK_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            } catch(err) {
+                console.error(err);
+                Swal.fire({icon:'error',title:'Backup gagal',text:err.message});
+            }
+        }
+
+        function restoreData(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    dataBerkas = data.dataBerkas || [];
+                    masterPegawai = data.masterPegawai || [];
+                    masterProgram = data.masterProgram || [];
+                    masterDesa = data.masterDesa || [];
+                    dataNihil = data.dataNihil || [];
+                    dataJadwal = data.dataJadwal || [];
+
+                    saveDataLocal();
+                    saveMasterData();
+                    saveMasterProgram();
+                    saveMasterDesa();
+                    saveNihilData();
+                    saveJadwalData();
+
+                    updateSelectPegawai?.();
+                    updateSelectProgram?.();
+                    renderMasterPegawai?.();
+                    renderMasterProgram?.();
+                    renderMasterDesa?.();
+                    renderTable?.();
+                    renderDashboard?.();
+                    renderJadwal?.();
+
+                    Swal.fire({icon:'success',title:'Restore berhasil'});
+                } catch(err) {
+                    console.error(err);
+                    Swal.fire({icon:'error',title:'File backup tidak valid'});
+                }
+            };
+            reader.readAsText(file);
+        }
+
+</script>
 </body>
 </html>
