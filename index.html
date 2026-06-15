@@ -763,7 +763,6 @@
         }
         function addOrUpdateBokRecord(record) { if(useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record); saveDataLocal(); }
         function deleteBokRecord(id) { if(useFirebase && currentUser) fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', id)); saveDataLocal(); }
-        function clearAllBokRecords() { if(useFirebase && currentUser) dataBerkas.forEach(d => fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id))); saveDataLocal(); }
         function saveMasterData() { localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai)); if(useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), { names: masterPegawai }); }
         function saveMasterProgram() { localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); if(useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), { programs: masterProgram }); }
         function saveMasterDesa() { localStorage.setItem('bokMasterDesa', JSON.stringify(masterDesa)); if(useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterDesa', 'list'), { desa: masterDesa }); }
@@ -1144,6 +1143,120 @@
             const years = [...new Set(dataBerkas.map(d => d.tahun))].sort((a, b) => b - a); if (years.length === 0) years.push(new Date().getFullYear().toString());
             filterDash.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join(''); if (!currentVal || !years.includes(currentVal)) currentVal = years[0]; filterDash.value = currentVal;
         }
+
+        // --- TAMBAHAN FIX DARI D.DUO (Fungsi Hapus dan Export) ---
+        function deleteSingleData(id, isFromModal = false) {
+            Swal.fire({
+                title: 'Hapus Data SPJ?',
+                text: 'Tindakan ini akan menghapus rekapan ini secara permanen.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#3B82F6',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                background: '#131A2B',
+                color: 'white'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    dataBerkas = dataBerkas.filter(d => d.id !== id);
+                    deleteBokRecord(id);
+                    saveDataLocal();
+                    
+                    updateFilterTahunOptions();
+                    renderTable();
+                    renderDashboard();
+                    
+                    if (isFromModal && activeDetailPegawai.nama) {
+                        openDetailPegawai(activeDetailPegawai.nama, activeDetailPegawai.tahun);
+                    }
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Terhapus',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: '#131A2B',
+                        color: 'white'
+                    });
+                }
+            });
+        }
+
+        function clearAllData() {
+            Swal.fire({
+                title: 'Hapus Semua Data?',
+                text: 'Seluruh rekapan SPJ pada TAHUN yang aktif saat ini akan dihapus permanen!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#3B82F6',
+                confirmButtonText: 'Ya, Bersihkan',
+                cancelButtonText: 'Batal',
+                background: '#131A2B',
+                color: 'white'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const qTahun = document.getElementById('filterTahun').value;
+                    const toDelete = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
+                    
+                    dataBerkas = dataBerkas.filter(d => String(d.tahun) !== String(qTahun));
+                    toDelete.forEach(d => deleteBokRecord(d.id));
+                    saveDataLocal();
+                    
+                    updateFilterTahunOptions();
+                    renderTable();
+                    renderDashboard();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Dibersihkan',
+                        text: `Semua data SPJ tahun ${qTahun} telah dihapus.`,
+                        background: '#131A2B',
+                        color: 'white'
+                    });
+                }
+            });
+        }
+
+        function exportToCSV() {
+            const qTahun = document.getElementById('filterTahun')?.value || new Date().getFullYear().toString();
+            const qSearch = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            let filteredData = dataBerkas.filter(d => String(d.tahun) === String(qTahun));
+            
+            if(qSearch) {
+                filteredData = filteredData.filter(d => d.namaPegawai.toLowerCase().includes(qSearch) || (d.program||'').toLowerCase().includes(qSearch));
+            }
+
+            if (filteredData.length === 0) {
+                return Swal.fire({title: 'Data Kosong', text: 'Tidak ada data yang bisa di-export pada filter saat ini.', icon: 'info', background: '#131A2B', color: 'white'});
+            }
+
+            let exportArr = filteredData.map((d, index) => ({
+                'No': index + 1,
+                'Tanggal': d.tanggal,
+                'Bulan': d.bulan,
+                'Tahun': d.tahun,
+                'Nama Pegawai': d.namaPegawai,
+                'Program': d.program || 'Umum',
+                'Dana/Anggaran (Rp)': d.nominal || 0,
+                'Berkas Dilengkapi': d.berkasDilengkapi.join(', '),
+                'Status': d.berkasDilengkapi.length === daftarBerkasWajib.length ? 'Lengkap' : 'Belum Lengkap',
+                'Keterangan/Revisi': d.keterangan || '-'
+            }));
+
+            try {
+                const worksheet = XLSX.utils.json_to_sheet(exportArr);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap SPJ");
+                XLSX.writeFile(workbook, `Rekap_SPJ_${qTahun}.xlsx`);
+            } catch (err) {
+                Swal.fire({title: 'Gagal Export', text: 'Pastikan library Excel berhasil dimuat oleh browser.', icon: 'error', background: '#131A2B', color: 'white'});
+            }
+        }
+        // --- AKHIR TAMBAHAN ---
 
         function generateTableRowsHTML(filteredData, qSearch, qTahun, isPublicMode = false) {
             let html = ''; let count = 0;
