@@ -99,6 +99,17 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        #sppdPrintArea {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
         /* FORMAT KHUSUS CETAK SPPD */
         @media print {
             @page {
@@ -131,13 +142,17 @@
 
             #sppdPrintArea {
                 display: block !important;
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                background: white;
-                color: black;
-                z-index: 9999;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                background: white !important;
+                color: black !important;
+                z-index: 9999 !important;
             }
 
             /* Kop Surat dengan Garis Ganda & SEMUA BOLD */
@@ -259,7 +274,7 @@
     class="h-screen flex overflow-hidden transition-colors duration-300 relative selection:bg-brand-blueglow selection:text-white">
 
     <!-- OVERLAY PRINT SPPD TERSEMBUNYI -->
-    <div id="sppdPrintArea" class="hidden">
+    <div id="sppdPrintArea">
 
         <!-- ========================================== -->
         <!-- HALAMAN DEPAN: SPPD -->
@@ -2066,31 +2081,15 @@
             const namaKades = targetDesa ? (targetDesa.kepalaDesa || '...................................................') : '...................................................';
             document.querySelectorAll('.vsmKadesNama').forEach(el => el.innerText = namaKades);
 
-            // Preload logo image before printing to ensure it renders
-            const logoImg = document.querySelector('#sppdPrintArea .kop-logo');
-            const doPrint = () => {
-                document.body.classList.add('printing-sppd');
+            // Trigger print SPPD layout
+            document.body.classList.add('printing-sppd');
+            // Give browser a short tick to ensure layout and rendering is updated before print modal freezes execution
+            setTimeout(() => {
                 window.print();
-                setTimeout(() => { document.body.classList.remove('printing-sppd'); }, 500);
-            };
-            if (logoImg && !logoImg.complete) {
-                logoImg.onload = doPrint;
-                logoImg.onerror = doPrint;
-                // Force browser to load the image by temporarily making it visible
-                const printArea = document.getElementById('sppdPrintArea');
-                printArea.style.position = 'absolute';
-                printArea.style.left = '-9999px';
-                printArea.classList.remove('hidden');
                 setTimeout(() => {
-                    if (!logoImg.complete) return; // wait for onload
-                    printArea.classList.add('hidden');
-                    printArea.style.position = '';
-                    printArea.style.left = '';
-                    doPrint();
-                }, 100);
-            } else {
-                doPrint();
-            }
+                    document.body.classList.remove('printing-sppd');
+                }, 500);
+            }, 150);
         }
 
         function handleUploadJadwal(event) {
