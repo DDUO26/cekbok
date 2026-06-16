@@ -1714,6 +1714,8 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             document.documentElement.classList.add('dark');
+            // Preload logo image for SPPD print (hidden div won't load images)
+            const _preloadLogo = new Image(); _preloadLogo.src = 'logo.png';
             const today = new Date();
             const elTgl = document.getElementById('tanggal'); if (elTgl) elTgl.valueAsDate = today;
             const elDashBulan = document.getElementById('dashFilterBulan'); if (elDashBulan) elDashBulan.value = daftarBulan[today.getMonth()];
@@ -1868,21 +1870,23 @@
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), (docSnap) => {
                 if (docSnap.exists()) {
                     let incoming = docSnap.data().names || []; masterPegawai = incoming.map(m => typeof m === 'string' ? { nama: m, nip: '', pangkat: '', jabatan: '', status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: '' } : m);
+                    localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai));
                     const currentSelect = document.getElementById('namaPegawai')?.value; updateSelectPegawai();
                     if (currentSelect && (masterPegawai || []).find(m => m && m.nama === currentSelect)) { const e = document.getElementById('namaPegawai'); if (e) e.value = currentSelect; }
                     window.renderMasterPegawai?.(); window.renderDashboard?.();
                 }
             });
-            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), (docSnap) => { if (docSnap.exists()) { masterProgram = docSnap.data().programs || []; window.renderMasterProgram?.(); updateSelectProgram(); } });
+            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), (docSnap) => { if (docSnap.exists()) { masterProgram = docSnap.data().programs || []; localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); window.renderMasterProgram?.(); updateSelectProgram(); } });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterDesa', 'list'), (docSnap) => {
                 if (docSnap.exists()) {
                     let incoming = docSnap.data().desa || [];
                     masterDesa = incoming.map(d => typeof d === 'string' ? { namaDesa: d, kepalaDesa: '.......................................' } : d);
+                    localStorage.setItem('bokMasterDesa', JSON.stringify(masterDesa));
                     window.renderMasterDesa?.();
                 }
             });
-            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), (docSnap) => { if (docSnap.exists()) { dataNihil = docSnap.data().records || []; window.renderDashboard?.(); window.renderTable?.(); } });
-            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'jadwal', 'list'), (docSnap) => { if (docSnap.exists()) { dataJadwal = docSnap.data().records || []; window.renderJadwal?.(); window.renderTable?.(); window.renderDashboard?.(); } });
+            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), (docSnap) => { if (docSnap.exists()) { dataNihil = docSnap.data().records || []; localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); window.renderDashboard?.(); window.renderTable?.(); } });
+            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'jadwal', 'list'), (docSnap) => { if (docSnap.exists()) { dataJadwal = docSnap.data().records || []; localStorage.setItem('bokJadwal', JSON.stringify(dataJadwal)); window.renderJadwal?.(); window.renderTable?.(); window.renderDashboard?.(); } });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), (docSnap) => { if (docSnap.exists() && docSnap.data().adminPassword) { globalAdminPwd = docSnap.data().adminPassword; localStorage.setItem('soLengkapPwd', globalAdminPwd); } });
         }
         function addOrUpdateBokRecord(record) { if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record); saveDataLocal(); }
@@ -2038,9 +2042,31 @@
             const namaKades = targetDesa ? (targetDesa.kepalaDesa || '...................................................') : '...................................................';
             document.querySelectorAll('.vsmKadesNama').forEach(el => el.innerText = namaKades);
 
-            document.body.classList.add('printing-sppd');
-            window.print();
-            setTimeout(() => { document.body.classList.remove('printing-sppd'); }, 500);
+            // Preload logo image before printing to ensure it renders
+            const logoImg = document.querySelector('#sppdPrintArea .kop-logo');
+            const doPrint = () => {
+                document.body.classList.add('printing-sppd');
+                window.print();
+                setTimeout(() => { document.body.classList.remove('printing-sppd'); }, 500);
+            };
+            if (logoImg && !logoImg.complete) {
+                logoImg.onload = doPrint;
+                logoImg.onerror = doPrint;
+                // Force browser to load the image by temporarily making it visible
+                const printArea = document.getElementById('sppdPrintArea');
+                printArea.style.position = 'absolute';
+                printArea.style.left = '-9999px';
+                printArea.classList.remove('hidden');
+                setTimeout(() => {
+                    if (!logoImg.complete) return; // wait for onload
+                    printArea.classList.add('hidden');
+                    printArea.style.position = '';
+                    printArea.style.left = '';
+                    doPrint();
+                }, 100);
+            } else {
+                doPrint();
+            }
         }
 
         function handleUploadJadwal(event) {
