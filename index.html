@@ -1598,6 +1598,72 @@
         </div>
     </div>
 
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onclick="if(event.target===this) closeSettingsModal()">
+        <div class="bg-brand-panel border border-brand-border rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-5 border-b border-brand-border">
+                <h2 class="text-base font-bold text-white flex items-center gap-3">
+                    <div class="bg-blue-500/20 text-blue-400 p-2 rounded-lg"><i class="fas fa-cog"></i></div>
+                    Pengaturan
+                </h2>
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white transition-colors w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-5 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <!-- Kepala Puskesmas -->
+                <div>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Kepala Puskesmas / PPK</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Nama Kepala Puskesmas</label>
+                            <input type="text" id="settingKapusNama" value="dr. STEVEN TULANDI" placeholder="Nama Kepala Puskesmas" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-white rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">NIP Kepala Puskesmas</label>
+                            <input type="text" id="settingKapusNip" value="197609232008031002" placeholder="NIP Kepala Puskesmas" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-white rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Nama PPK (Pejabat Pembuat Komitmen)</label>
+                            <input type="text" id="settingPpkNama" value="dr. STEVEN TULANDI" placeholder="Nama PPK" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-white rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">NIP PPK</label>
+                            <input type="text" id="settingPpkNip" value="197609232008031002" placeholder="NIP PPK" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-white rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-colors">
+                        </div>
+                    </div>
+                    <button onclick="saveSettingsKapus()" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-sm shadow-[0_4px_15px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> Simpan Pengaturan Pejabat
+                    </button>
+                </div>
+
+                <!-- Backup & Restore -->
+                <div class="pt-4 border-t border-brand-border">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Backup & Restore Data</p>
+                    <div class="space-y-3">
+                        <button onclick="backupData()" class="w-full bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 py-2.5 rounded-xl font-bold text-sm border border-emerald-500/30 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-download"></i> Backup Data
+                        </button>
+                        <label class="w-full bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 py-2.5 rounded-xl font-bold text-sm border border-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fas fa-upload"></i> Restore Data
+                            <input type="file" accept=".json" onchange="restoreData(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Keamanan -->
+                <div class="pt-4 border-t border-brand-border">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Keamanan</p>
+                    <button onclick="changePassword()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold text-sm border border-slate-700 transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-key"></i> Ubah Sandi Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN SCRIPT -->
     <script>
         const daftarBerkasWajib = ['RILL', 'Surat Pernyataan', 'Surat Tugas', 'SPPD', 'Laporan', 'Foto'];
@@ -1648,6 +1714,8 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             document.documentElement.classList.add('dark');
+            // Preload logo image for SPPD print (hidden div won't load images)
+            const _preloadLogo = new Image(); _preloadLogo.src = 'logo.png';
             const today = new Date();
             const elTgl = document.getElementById('tanggal'); if (elTgl) elTgl.valueAsDate = today;
             const elDashBulan = document.getElementById('dashFilterBulan'); if (elDashBulan) elDashBulan.value = daftarBulan[today.getMonth()];
@@ -1794,29 +1862,71 @@
         }
         function setupRealtimeListeners() {
             if (!useFirebase || !currentUser) return;
+            let isFirstBokSnapshot = true;
             fbOnSnapshot(fbCollection(db, 'artifacts', appId, 'public', 'data', 'bokData'), (snapshot) => {
-                if (snapshot.empty && dataBerkas.length > 0 && !localStorage.getItem('fb_synced_v19')) { dataBerkas.forEach(d => addOrUpdateBokRecord(d)); localStorage.setItem('fb_synced_v19', 'true'); return; }
-                localStorage.setItem('fb_synced_v19', 'true'); let incoming = []; snapshot.forEach(d => incoming.push(d.data())); dataBerkas = incoming; saveDataLocal();
+                let incoming = []; snapshot.forEach(d => incoming.push(d.data()));
+                if (snapshot.empty && dataBerkas.length > 0) {
+                    // Firebase is empty but we have local data — push local to Firebase
+                    dataBerkas.forEach(d => addOrUpdateBokRecord(d));
+                    isFirstBokSnapshot = false;
+                    return;
+                }
+                if (incoming.length > 0) {
+                    if (isFirstBokSnapshot && dataBerkas.length > 0 && incoming.length < dataBerkas.length) {
+                        // First snapshot has FEWER records than local — merge to avoid data loss
+                        const incomingIds = new Set(incoming.map(d => d.id));
+                        const localOnly = dataBerkas.filter(d => d.id && !incomingIds.has(d.id));
+                        localOnly.forEach(d => addOrUpdateBokRecord(d)); // push missing records to Firebase
+                        dataBerkas = [...incoming, ...localOnly];
+                    } else {
+                        dataBerkas = incoming;
+                    }
+                    saveDataLocal();
+                }
+                isFirstBokSnapshot = false;
                 updateFilterTahunOptions(); updateDashFilterTahun(); window.renderTable?.(); window.renderDashboard?.();
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), (docSnap) => {
                 if (docSnap.exists()) {
-                    let incoming = docSnap.data().names || []; masterPegawai = incoming.map(m => typeof m === 'string' ? { nama: m, nip: '', pangkat: '', jabatan: '', status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: '' } : m);
+                    let incoming = docSnap.data().names || [];
+                    if (incoming.length === 0 && masterPegawai.length > 0) { saveMasterData(); return; }
+                    masterPegawai = incoming.map(m => typeof m === 'string' ? { nama: m, nip: '', pangkat: '', jabatan: '', status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: '' } : m);
+                    localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai));
                     const currentSelect = document.getElementById('namaPegawai')?.value; updateSelectPegawai();
                     if (currentSelect && (masterPegawai || []).find(m => m && m.nama === currentSelect)) { const e = document.getElementById('namaPegawai'); if (e) e.value = currentSelect; }
                     window.renderMasterPegawai?.(); window.renderDashboard?.();
-                }
+                } else if (masterPegawai.length > 0) { saveMasterData(); }
             });
-            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), (docSnap) => { if (docSnap.exists()) { masterProgram = docSnap.data().programs || []; window.renderMasterProgram?.(); updateSelectProgram(); } });
+            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), (docSnap) => {
+                if (docSnap.exists()) {
+                    let incoming = docSnap.data().programs || [];
+                    if (incoming.length === 0 && masterProgram.length > 0) { saveMasterProgram(); return; }
+                    masterProgram = incoming; localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); window.renderMasterProgram?.(); updateSelectProgram();
+                } else if (masterProgram.length > 0) { saveMasterProgram(); }
+            });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterDesa', 'list'), (docSnap) => {
                 if (docSnap.exists()) {
                     let incoming = docSnap.data().desa || [];
+                    if (incoming.length === 0 && masterDesa.length > 0) { saveMasterDesa(); return; }
                     masterDesa = incoming.map(d => typeof d === 'string' ? { namaDesa: d, kepalaDesa: '.......................................' } : d);
+                    localStorage.setItem('bokMasterDesa', JSON.stringify(masterDesa));
                     window.renderMasterDesa?.();
-                }
+                } else if (masterDesa.length > 0) { saveMasterDesa(); }
             });
-            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), (docSnap) => { if (docSnap.exists()) { dataNihil = docSnap.data().records || []; window.renderDashboard?.(); window.renderTable?.(); } });
-            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'jadwal', 'list'), (docSnap) => { if (docSnap.exists()) { dataJadwal = docSnap.data().records || []; window.renderJadwal?.(); window.renderTable?.(); window.renderDashboard?.(); } });
+            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), (docSnap) => {
+                if (docSnap.exists()) {
+                    let incoming = docSnap.data().records || [];
+                    if (incoming.length === 0 && dataNihil.length > 0) { saveNihilData(); return; }
+                    dataNihil = incoming; localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); window.renderDashboard?.(); window.renderTable?.();
+                } else if (dataNihil.length > 0) { saveNihilData(); }
+            });
+            fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'jadwal', 'list'), (docSnap) => {
+                if (docSnap.exists()) {
+                    let incoming = docSnap.data().records || [];
+                    if (incoming.length === 0 && dataJadwal.length > 0) { saveJadwalData(); return; }
+                    dataJadwal = incoming; localStorage.setItem('bokJadwal', JSON.stringify(dataJadwal)); window.renderJadwal?.(); window.renderTable?.(); window.renderDashboard?.();
+                } else if (dataJadwal.length > 0) { saveJadwalData(); }
+            });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), (docSnap) => { if (docSnap.exists() && docSnap.data().adminPassword) { globalAdminPwd = docSnap.data().adminPassword; localStorage.setItem('soLengkapPwd', globalAdminPwd); } });
         }
         function addOrUpdateBokRecord(record) { if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record); saveDataLocal(); }
@@ -1972,9 +2082,31 @@
             const namaKades = targetDesa ? (targetDesa.kepalaDesa || '...................................................') : '...................................................';
             document.querySelectorAll('.vsmKadesNama').forEach(el => el.innerText = namaKades);
 
-            document.body.classList.add('printing-sppd');
-            window.print();
-            setTimeout(() => { document.body.classList.remove('printing-sppd'); }, 500);
+            // Preload logo image before printing to ensure it renders
+            const logoImg = document.querySelector('#sppdPrintArea .kop-logo');
+            const doPrint = () => {
+                document.body.classList.add('printing-sppd');
+                window.print();
+                setTimeout(() => { document.body.classList.remove('printing-sppd'); }, 500);
+            };
+            if (logoImg && !logoImg.complete) {
+                logoImg.onload = doPrint;
+                logoImg.onerror = doPrint;
+                // Force browser to load the image by temporarily making it visible
+                const printArea = document.getElementById('sppdPrintArea');
+                printArea.style.position = 'absolute';
+                printArea.style.left = '-9999px';
+                printArea.classList.remove('hidden');
+                setTimeout(() => {
+                    if (!logoImg.complete) return; // wait for onload
+                    printArea.classList.add('hidden');
+                    printArea.style.position = '';
+                    printArea.style.left = '';
+                    doPrint();
+                }, 100);
+            } else {
+                doPrint();
+            }
         }
 
         function handleUploadJadwal(event) {
