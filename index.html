@@ -2586,15 +2586,20 @@
                     const workbook = XLSX.read(data, { type: 'array' }); const firstSheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[firstSheetName]; json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 } catch (err) { return Swal.fire({ title: 'Error', text: 'Format tidak didukung.', icon: 'error', background: '#131A2B', color: 'white' }); }
 
-                let parsedData = []; let currentKegiatan = ''; let newPegawai = false; let newDesa = false;
+                let parsedData = []; let currentKegiatan = ''; let currentProgram = ''; let newPegawai = false; let newDesa = false;
                 masterDesa = (masterDesa || []).filter(Boolean);
                 masterPegawai = (masterPegawai || []).filter(Boolean);
 
                 json.forEach((row, rowIndex) => {
                     if (rowIndex === 0 || rowIndex === 1 || rowIndex === 2 || rowIndex === 3) return;
-                    let namaK = row[1]; let desaSub = row[2]; let peg = row[3]; let tglRaw = row[4]; let dana = row[5];
+                    let progRaw = row[1]; let kegDesaRaw = row[2]; let peg = row[3]; let tglRaw = row[4]; let dana = row[5];
 
-                    if (namaK && !tglRaw) { currentKegiatan = namaK; }
+                    if (progRaw && typeof progRaw === 'string') {
+                        currentProgram = progRaw.trim();
+                    }
+                    if (kegDesaRaw && typeof kegDesaRaw === 'string' && !tglRaw) {
+                        currentKegiatan = kegDesaRaw.trim();
+                    }
 
                     if (tglRaw && desaSub) {
                         let tClean = String(tglRaw).replace(/\D/g, '');
@@ -2633,7 +2638,8 @@
 
                         parsedData.push({
                             id: 'JDW_' + Date.now() + Math.random().toString(36).substr(2, 5),
-                            kegiatan: currentKegiatan || namaK || 'Kegiatan Umum',
+                            program: currentProgram || progRaw || 'Program Umum',
+                            kegiatan: currentKegiatan || kegDesaRaw || 'Kegiatan Umum',
                             desa: desClean,
                             pegawai: normalizedPetugas.length > 0 ? normalizedPetugas.join(' | ') : '-',
                             tanggal: tglFormat,
@@ -2762,10 +2768,10 @@
 
             let fJadwal = dataJadwal.filter(j => String(j.tahun) === String(tFilt));
 
-            thead.innerHTML = `<tr><th class="p-4 w-32">Tanggal</th><th class="p-4 w-1/3">Nama Kegiatan</th><th class="p-4">Desa/Lokasi</th><th class="p-4 w-1/4">Pegawai/Petugas</th><th class="p-4 text-right">Dana</th>${isAdmin ? '<th class="p-4 text-center min-w-[100px]">Aksi</th>' : ''}</tr>`;
+            thead.innerHTML = `<tr><th class="p-4 w-32">Tanggal</th><th class="p-4 w-1/4">Nama Program</th><th class="p-4 w-1/3">Nama Kegiatan</th><th class="p-4">Desa/Lokasi</th><th class="p-4 w-1/4">Pegawai/Petugas</th><th class="p-4 text-right">Dana</th>${isAdmin ? '<th class="p-4 text-center min-w-[100px]">Aksi</th>' : ''}</tr>`;
 
             if (fJadwal.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 6 : 5}" class="p-8 text-center text-gray-500 italic">Jadwal kegiatan tahun ${tFilt} belum tersedia. Silakan unggah file Excel/CSV.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 7 : 6}" class="p-8 text-center text-gray-500 italic">Jadwal kegiatan tahun ${tFilt} belum tersedia. Silakan unggah file Excel/CSV.</td></tr>`;
                 return;
             }
 
@@ -2788,17 +2794,18 @@
             let sortedBulan = Object.keys(groupedByBulan).sort((a, b) => daftarBulan.indexOf(a) - daftarBulan.indexOf(b));
 
             for (let bln of sortedBulan) {
-                html += `<tr class="bg-[#21163F]"><td colspan="${isAdmin ? 6 : 5}" class="p-4 border-b border-brand-border font-bold text-purple-400 uppercase tracking-wider"><i class="fas fa-calendar-alt mr-2"></i>JADWAL ${escJS(bln)}</td></tr>`;
+                html += `<tr class="bg-[#21163F]"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-purple-400 uppercase tracking-wider"><i class="fas fa-calendar-alt mr-2"></i>JADWAL ${escJS(bln)}</td></tr>`;
                 const groupedKeg = groupedByBulan[bln];
 
                 for (let key in groupedKeg) {
                     gIdx++; const count = groupedKeg[key].length; const strIdx = String(gIdx); const isExpanded = expandedJadwalGroups.has(strIdx);
-                    html += `<tr class="bg-[#1A2235] cursor-pointer hover:bg-[#1E293B] transition-colors" onclick="toggleJadwalGroup('${gIdx}')"><td colspan="${isAdmin ? 6 : 5}" class="p-4 border-b border-brand-border font-bold text-blue-400 pl-8"><i class="fas fa-chevron-right text-xs mr-2 transition-transform duration-200" style="transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}"></i>${escJS(key)} <span class="text-xs text-gray-500 font-normal ml-2">(${count} jadwal)</span></td></tr>`;
+                    html += `<tr class="bg-[#1A2235] cursor-pointer hover:bg-[#1E293B] transition-colors" onclick="toggleJadwalGroup('${gIdx}')"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-blue-400 pl-8"><i class="fas fa-chevron-right text-xs mr-2 transition-transform duration-200" style="transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}"></i>${escJS(key)} <span class="text-xs text-gray-500 font-normal ml-2">(${count} jadwal)</span></td></tr>`;
 
                     groupedKeg[key].forEach(j => {
                         if (isAdmin) {
                             html += `<tr class="${isExpanded ? '' : 'hidden'} jadwal-group-${gIdx} hover:bg-white/5 transition-colors border-b border-brand-border/50">
                                 <td class="p-2 pl-14 align-top"><input type="date" value="${escJS(j.tanggal) || ''}" onchange="updateJadwalField('${j.id}', 'tanggal', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none [color-scheme:dark]"></td>
+                                <td class="p-2 align-top"><input type="text" value="${escJS(j.program) || ''}" onchange="updateJadwalField('${j.id}', 'program', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-purple-400 font-bold px-2 py-1.5 rounded focus:border-blue-500 outline-none placeholder-gray-600" placeholder="Kosong"></td>
                                 <td class="p-2 align-top"><input type="text" value="${escJS(j.kegiatan) || ''}" onchange="updateJadwalField('${j.id}', 'kegiatan', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"></td>
                                 <td class="p-2 align-top"><select onchange="updateJadwalField('${j.id}', 'desa', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"><option value="${escJS(j.desa)}" selected hidden>${escJS(j.desa)}</option>${optDesa}</select></td>
                                 <td class="p-2 align-top"><div onclick="editPegawaiJadwal('${j.id}')" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded cursor-pointer hover:border-blue-500 min-h-[30px] flex items-center justify-between transition-colors shadow-inner"><span class="truncate pr-2">${escJS(j.pegawai).replace(/ \| /g, ', ') || '- Pilih Petugas -'}</span><i class="fas fa-chevron-down text-[10px] text-gray-500 shrink-0"></i></div></td>
@@ -2812,13 +2819,14 @@
                                 </td>
                             </tr>`;
                         } else {
-                            html += `<tr class="${isExpanded ? '' : 'hidden'} jadwal-group-${gIdx} hover:bg-white/5 transition-colors border-b border-brand-border/50"><td class="p-4 pl-14 align-top whitespace-nowrap"><span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-xs font-bold">${formatShortDate(j.tanggal) || '-'}</span></td><td class="p-4 align-top font-bold text-white">${escJS(j.kegiatan)}</td><td class="p-4 align-top text-gray-400">${escJS(j.desa)}</td><td class="p-4 align-top text-emerald-400 font-medium">${escJS(j.pegawai).replace(/ \| /g, ', ')}</td><td class="p-4 align-top text-right text-gray-300 font-semibold whitespace-nowrap">${j.dana ? formatRp(j.dana) : '-'}</td></tr>`;
+                            html += `<tr class="${isExpanded ? '' : 'hidden'} jadwal-group-${gIdx} hover:bg-white/5 transition-colors border-b border-brand-border/50"><td class="p-4 pl-14 align-top whitespace-nowrap"><span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-xs font-bold">${formatShortDate(j.tanggal) || '-'}</span></td><td class="p-4 align-top text-xs text-purple-400 font-semibold">${escJS(j.program) || '-'}</td><td class="p-4 align-top font-bold text-white">${escJS(j.kegiatan)}</td><td class="p-4 align-top text-gray-400">${escJS(j.desa)}</td><td class="p-4 align-top text-emerald-400 font-medium">${escJS(j.pegawai).replace(/ \| /g, ', ')}</td><td class="p-4 align-top text-right text-gray-300 font-semibold whitespace-nowrap">${j.dana ? formatRp(j.dana) : '-'}</td></tr>`;
                         }
                     });
                 }
             }
             tbody.innerHTML = html;
         };
+
 
         // --- MANAJEMEN PROGRAM ---
         function updateSelectProgram() {
