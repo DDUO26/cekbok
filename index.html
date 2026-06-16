@@ -107,8 +107,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        #sppdPrintArea,
-        #rillPrintArea {
+        #sppdPrintArea, #rillPrintArea, #spPrintArea {
             position: absolute;
             left: -9999px;
             top: -9999px;
@@ -145,13 +144,11 @@
                 display: none !important;
             }
 
-            body.printing-sppd> :not(#sppdPrintArea),
-            body.printing-rill> :not(#rillPrintArea) {
+            body.printing-sppd > :not(#sppdPrintArea), body.printing-rill > :not(#rillPrintArea), body.printing-sp > :not(#spPrintArea) {
                 display: none !important;
             }
 
-            #sppdPrintArea,
-            #rillPrintArea {
+            #sppdPrintArea, #rillPrintArea, #spPrintArea {
                 display: block !important;
                 position: absolute !important;
                 left: 0 !important;
@@ -1608,9 +1605,26 @@
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
+                            <select id="jadwalFilterBulan"
+                                class="bg-[#0A0F1C] text-white border border-brand-border rounded-lg text-sm font-bold py-1.5 px-3 focus:border-blue-500 outline-none cursor-pointer"
+                                onchange="window.renderJadwal?.()">
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni" selected>Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
                             <select id="jadwalFilterTahun"
                                 class="bg-[#0A0F1C] text-white border border-brand-border rounded-lg text-sm font-bold py-1.5 px-3 focus:border-blue-500 outline-none cursor-pointer"
                                 onchange="window.renderJadwal?.()"></select>
+                            <button onclick="clearJadwal()" class="admin-only hidden bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg border border-red-500/30 transition-colors text-xs font-bold items-center gap-2" title="Hapus jadwal untuk bulan yang dipilih"><i data-lucide="trash-2" class="w-3.5 h-3.5 inline-block"></i> Hapus Bulan Ini</button>
                         </div>
                     </div>
                     <div
@@ -2164,7 +2178,7 @@
             let t = document.getElementById('dashFilterTahun')?.value || new Date().getFullYear().toString();
             openDetailPegawai(nama, t);
         }
-        function openSettingsModal() { if (!isAdmin) return Swal.fire({ title: 'Akses Ditolak', text: 'Login sebagai admin.', icon: 'error', background: '#131A2B', color: 'white' }); document.getElementById('settingsModal').classList.remove('hidden'); }
+        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
 
         function saveSettingsKapus() {
@@ -2484,7 +2498,6 @@
         }
 
         function printRILL(idJadwal, namaPetugasSpesifik = null) {
-            if (!isAdmin) return Swal.fire({ title: 'Akses Ditolak', text: 'Hanya admin yang bisa cetak.', icon: 'error', background: '#131A2B', color: 'white' });
             let j = dataJadwal.find(x => x.id === idJadwal);
             if (!j) return;
 
@@ -2574,6 +2587,91 @@
                 window.print();
                 setTimeout(() => {
                     document.body.classList.remove('printing-rill');
+                }, 500);
+            }, 150);
+        }
+
+        function printSP(idJadwal, namaPetugasSpesifik = null) {
+            let j = dataJadwal.find(x => x.id === idJadwal);
+            if (!j) return;
+
+            let targetPetugas = namaPetugasSpesifik;
+            if (!targetPetugas && j.pegawai) {
+                let pList = [];
+                if (j.pegawai.includes(' | ')) pList = j.pegawai.split(' | ').map(s => s.trim());
+                else pList = [j.pegawai.trim()];
+
+                if (pList.length > 1) {
+                    let optHtml = pList.map(p => `<button onclick="Swal.close(); printSP('${idJadwal}', '${escJS(p)}')" class="w-full bg-[#1A2235] border border-[#1E293B] text-white p-3 rounded mb-2 hover:bg-teal-600 transition-colors">${escJS(p)}</button>`).join('');
+                    return Swal.fire({
+                        title: 'Pilih Petugas yang akan dicetak SP',
+                        html: `<div class="mt-4">${optHtml}</div>`,
+                        showConfirmButton: false,
+                        showCancelButton: true,
+                        cancelButtonText: 'Batal',
+                        background: '#131A2B', color: 'white'
+                    });
+                } else {
+                    targetPetugas = pList[0];
+                }
+            }
+
+            if (!targetPetugas || targetPetugas === '-') return Swal.fire({ icon: 'error', title: 'Pilih Petugas Dulu', text: 'Jadwal ini belum memiliki petugas.', background: '#131A2B', color: 'white' });
+
+            let dtPeg = (masterPegawai || []).find(m => m && m.nama && m.nama.toLowerCase() === targetPetugas.toLowerCase()) || { nama: targetPetugas, nip: '-', pangkat: '-', jabatan: '-' };
+
+            const romaBulan = (bulanName) => {
+                const rom = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+                let idx = daftarBulan.indexOf(bulanName) + 1;
+                if (idx < 1) idx = new Date().getMonth() + 1;
+                return rom[idx];
+            };
+
+            const tahunText = j.tahun || new Date().getFullYear();
+            const romaDanTahun = `${romaBulan(j.bulan)}-${tahunText}`;
+            const nomorSPPD = `         /440/DINKES-MT/PKM-SLN/SPPD-DD/${romaDanTahun}`;
+            
+            let tglObj = new Date(j.tanggal);
+            let tglStr = isNaN(tglObj) ? j.tanggal : `${tglObj.getDate()} ${daftarBulan[tglObj.getMonth()]} ${tglObj.getFullYear()}`;
+
+            document.querySelectorAll('.vsmSpPgwNama').forEach(el => el.textContent = dtPeg.nama);
+            
+            let nipPgwTxt = dtPeg.nip ? String(dtPeg.nip) : '-';
+            let nipUpper = nipPgwTxt.toUpperCase();
+            
+            let nipLabel = "NIP";
+            let nipVal = nipPgwTxt;
+
+            if (nipPgwTxt !== '-' && nipPgwTxt.length > 0) {
+                if (nipUpper.startsWith("NI PPPK")) {
+                    nipLabel = "NI PPPK";
+                    nipVal = nipPgwTxt.replace(/ni pppk\.?\s*/i, "");
+                } else if (nipUpper.startsWith("NIP")) {
+                    nipLabel = "NIP";
+                    nipVal = nipPgwTxt.replace(/nip\.?\s*/i, "");
+                }
+            }
+
+            document.querySelectorAll('.vsmSpPgwNipLabel').forEach(el => el.textContent = nipLabel);
+            document.querySelectorAll('.vsmSpPgwNipVal').forEach(el => el.textContent = nipVal);
+            
+            document.querySelectorAll('.vsmSpPgwNipTtd').forEach(el => el.textContent = `${nipLabel}. ${nipVal}`);
+
+            document.querySelectorAll('.vsmSpPgwPangkat').forEach(el => el.textContent = dtPeg.pangkat || '-');
+            document.querySelectorAll('.vsmSpPgwJabatan').forEach(el => el.textContent = dtPeg.jabatan || '-');
+            
+            document.querySelectorAll('.vsmSpBulanTahunRomawi').forEach(el => el.textContent = romaDanTahun);
+            document.querySelectorAll('.vsmSpNomor').forEach(el => el.textContent = nomorSPPD);
+            document.querySelectorAll('.vsmSpTanggal').forEach(el => el.textContent = tglStr);
+            document.querySelectorAll('.vsmSpKegiatan').forEach(el => el.textContent = j.kegiatan || '-');
+
+            document.querySelectorAll('.vsmSpTglTtd').forEach(el => el.textContent = tglStr);
+
+            document.body.classList.add('printing-sp');
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    document.body.classList.remove('printing-sp');
                 }, 500);
             }, 150);
         }
@@ -2670,10 +2768,10 @@
             }; reader.readAsArrayBuffer(file); event.target.value = '';
         }
 
-        function clearJadwal() {
-            const selectedBulan = document.getElementById('uploadJadwalBulan').value;
-            const selectedTahun = document.getElementById('uploadJadwalTahun').value;
-            Swal.fire({ title: `Bersihkan Jadwal ${selectedBulan}?`, text: 'Data jadwal bulan ini akan dihapus dari sistem.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Hapus', background: '#131A2B', color: 'white' }).then(res => {
+                function clearJadwal() {
+            const selectedBulan = document.getElementById('jadwalFilterBulan').value;
+            const selectedTahun = document.getElementById('jadwalFilterTahun').value;
+            Swal.fire({ title: `Hapus Seluruh Jadwal ${selectedBulan}?`, text: 'Semua data jadwal bulan ini akan dihapus permanen dari sistem.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Hapus Semua', background: '#131A2B', color: 'white' }).then(res => {
                 if (res.isConfirmed) {
                     dataJadwal = dataJadwal.filter(j => !(j.bulan === selectedBulan && String(j.tahun) === String(selectedTahun)));
                     saveJadwalData(); window.renderJadwal?.(); window.renderTable?.(); window.renderDashboard?.();
@@ -2785,24 +2883,25 @@
             }
 
             const tFilt = document.getElementById('jadwalFilterTahun').value;
-            safeSetText('labelJadwalSelected', `(${tFilt})`);
+            let bFiltEl = document.getElementById('jadwalFilterBulan');
+            const bFilt = bFiltEl ? bFiltEl.value : daftarBulan[new Date().getMonth()];
+            
+            safeSetText('labelJadwalSelected', `(${bFilt} ${tFilt})`);
 
-            let fJadwal = dataJadwal.filter(j => String(j.tahun) === String(tFilt));
+            let fJadwal = dataJadwal.filter(j => String(j.tahun) === String(tFilt) && j.bulan === bFilt);
 
-            thead.innerHTML = `<tr><th class="p-4 w-32">Tanggal</th><th class="p-4 w-1/4">Nama Program</th><th class="p-4 w-1/3">Nama Kegiatan</th><th class="p-4">Desa/Lokasi</th><th class="p-4 w-1/4">Pegawai/Petugas</th><th class="p-4 text-right">Dana</th>${isAdmin ? '<th class="p-4 text-center min-w-[100px]">Aksi</th>' : ''}</tr>`;
+            thead.innerHTML = `<tr><th class="p-4 w-32">Tanggal</th><th class="p-4 w-1/4">Nama Program</th><th class="p-4 w-1/3">Nama Kegiatan</th><th class="p-4">Desa/Lokasi</th><th class="p-4 w-1/4">Pegawai/Petugas</th><th class="p-4 text-right">Dana</th><th class="p-4 text-center min-w-[150px]">${isAdmin ? 'Aksi' : 'Cetak'}</th></tr>`;
 
             if (fJadwal.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 7 : 6}" class="p-8 text-center text-gray-500 italic">Jadwal kegiatan tahun ${tFilt} belum tersedia. Silakan unggah file Excel/CSV.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500 italic">Jadwal kegiatan untuk ${bFilt} ${tFilt} belum tersedia. Silakan unggah file Excel/CSV.</td></tr>`;
                 return;
             }
 
-            const groupedByBulan = {};
+            const groupedByKeg = {};
             fJadwal.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(j => {
-                const b = j.bulan || 'Bulan Tidak Diketahui';
-                if (!groupedByBulan[b]) groupedByBulan[b] = {};
                 const k = j.kegiatan || 'Tanpa Nama Kegiatan';
-                if (!groupedByBulan[b][k]) groupedByBulan[b][k] = [];
-                groupedByBulan[b][k].push(j);
+                if (!groupedByKeg[k]) groupedByKeg[k] = [];
+                groupedByKeg[k].push(j);
             });
 
             let html = ''; let gIdx = 0;
@@ -2812,44 +2911,47 @@
                 return `<option value="${escJS(namaD)}">${escJS(namaD)}</option>`;
             }).join('');
 
-            let sortedBulan = Object.keys(groupedByBulan).sort((a, b) => daftarBulan.indexOf(a) - daftarBulan.indexOf(b));
+            html += `<tr class="bg-[#21163F]"><td colspan="7" class="p-4 border-b border-brand-border font-bold text-purple-400 uppercase tracking-wider"><i data-lucide="calendar-days" class="w-4 h-4 mr-2 inline-block"></i>JADWAL ${escJS(bFilt).toUpperCase()}</td></tr>`;
 
-            for (let bln of sortedBulan) {
-                html += `<tr class="bg-[#21163F]"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-purple-400 uppercase tracking-wider"><i data-lucide="calendar-days" class="w-4 h-4 mr-2 inline-block"></i>JADWAL ${escJS(bln)}</td></tr>`;
-                const groupedKeg = groupedByBulan[bln];
+            for (let key in groupedByKeg) {
+                gIdx++; const count = groupedByKeg[key].length; const strIdx = String(gIdx); const isExpanded = expandedJadwalGroups.has(strIdx);
+                html += `<tr class="bg-[#1A2235] cursor-pointer hover:bg-[#1E293B] transition-colors" onclick="toggleJadwalGroup('${gIdx}')"><td colspan="7" class="p-4 border-b border-brand-border font-bold text-blue-400 pl-8"><i data-lucide="chevron-right" class="inline-block text-xs mr-2 transition-transform duration-200" style="transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}"></i>${escJS(key)} <span class="text-xs text-gray-500 font-normal ml-2">(${count} jadwal)</span></td></tr>`;
 
-                for (let key in groupedKeg) {
-                    gIdx++; const count = groupedKeg[key].length; const strIdx = String(gIdx); const isExpanded = expandedJadwalGroups.has(strIdx);
-                    html += `<tr class="bg-[#1A2235] cursor-pointer hover:bg-[#1E293B] transition-colors" onclick="toggleJadwalGroup('${gIdx}')"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-blue-400 pl-8"><i data-lucide="chevron-right" class="inline-block text-xs mr-2 transition-transform duration-200" style="transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}"></i>${escJS(key)} <span class="text-xs text-gray-500 font-normal ml-2">(${count} jadwal)</span></td></tr>`;
-
-                    groupedKeg[key].forEach(j => {
-                        if (isAdmin) {
-                            html += `<tr class="${isExpanded ? '' : 'hidden'} jadwal-group-${gIdx} hover:bg-white/5 transition-colors border-b border-brand-border/50">
-                                <td class="p-2 pl-14 align-top"><input type="date" value="${escJS(j.tanggal) || ''}" onchange="updateJadwalField('${j.id}', 'tanggal', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none [color-scheme:dark]"></td>
-                                <td class="p-2 align-top"><input type="text" value="${escJS(j.program) || ''}" onchange="updateJadwalField('${j.id}', 'program', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-purple-400 font-bold px-2 py-1.5 rounded focus:border-blue-500 outline-none placeholder-gray-600" placeholder="Kosong"></td>
-                                <td class="p-2 align-top"><input type="text" value="${escJS(j.kegiatan) || ''}" onchange="updateJadwalField('${j.id}', 'kegiatan', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"></td>
-                                <td class="p-2 align-top"><select onchange="updateJadwalField('${j.id}', 'desa', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"><option value="${escJS(j.desa)}" selected hidden>${escJS(j.desa)}</option>${optDesa}</select></td>
-                                <td class="p-2 align-top"><div onclick="editPegawaiJadwal('${j.id}')" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded cursor-pointer hover:border-blue-500 min-h-[30px] flex items-center justify-between transition-colors shadow-inner"><span class="truncate pr-2">${escJS(j.pegawai).replace(/ \| /g, ', ') || '- Pilih Petugas -'}</span><i data-lucide="chevron-down" class="inline-block text-[10px] text-gray-500 shrink-0"></i></div></td>
-                                <td class="p-2 align-top"><input type="number" value="${j.dana || ''}" onchange="updateJadwalField('${j.id}', 'dana', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none text-right"></td>
-                                <td class="p-2 align-top text-center flex flex-col gap-1 items-center">
-                                    <div class="flex gap-1 w-full">
-                                        <button onclick="printSPPD('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-colors py-1" title="Cetak SPPD"><i data-lucide="printer" class="w-3 h-3 inline-block"></i> SPPD</button>
-                                        <button onclick="printRILL('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600 hover:text-white transition-colors py-1" title="Cetak RILL"><i data-lucide="file-text" class="w-3 h-3 inline-block"></i> RILL</button>
-                                    </div>
-                                    <button onclick="hapusJadwalItem('${j.id}')" class="w-full text-[10px] font-bold rounded bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-600 hover:text-white transition-colors py-1"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i> Hapus</button>
-                                </td>
-                            </tr>`;
-                        } else {
-                            html += `<tr class="${isExpanded ? '' : 'hidden'} jadwal-group-${gIdx} hover:bg-white/5 transition-colors border-b border-brand-border/50"><td class="p-4 pl-14 align-top whitespace-nowrap"><span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-xs font-bold">${formatShortDate(j.tanggal) || '-'}</span></td><td class="p-4 align-top text-xs text-purple-400 font-semibold">${escJS(j.program) || '-'}</td><td class="p-4 align-top font-bold text-white">${escJS(j.kegiatan)}</td><td class="p-4 align-top text-gray-400">${escJS(j.desa)}</td><td class="p-4 align-top text-emerald-400 font-medium">${escJS(j.pegawai).replace(/ \| /g, ', ')}</td><td class="p-4 align-top text-right text-gray-300 font-semibold whitespace-nowrap">${j.dana ? formatRp(j.dana) : '-'}</td></tr>`;
-                        }
-                    });
-                }
+                groupedByKeg[key].forEach(j => {
+                    if (isAdmin) {
+                        html += `<tr class="${isExpanded ? '' : 'hidden'} jadwal-group-${gIdx} hover:bg-white/5 transition-colors border-b border-brand-border/50">
+                            <td class="p-2 pl-14 align-top"><input type="date" value="${escJS(j.tanggal) || ''}" onchange="updateJadwalField('${j.id}', 'tanggal', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none [color-scheme:dark]"></td>
+                            <td class="p-2 align-top"><input type="text" value="${escJS(j.program) || ''}" onchange="updateJadwalField('${j.id}', 'program', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-purple-400 font-bold px-2 py-1.5 rounded focus:border-blue-500 outline-none placeholder-gray-600" placeholder="Kosong"></td>
+                            <td class="p-2 align-top"><input type="text" value="${escJS(j.kegiatan) || ''}" onchange="updateJadwalField('${j.id}', 'kegiatan', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"></td>
+                            <td class="p-2 align-top"><select onchange="updateJadwalField('${j.id}', 'desa', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"><option value="${escJS(j.desa)}" selected hidden>${escJS(j.desa)}</option>${optDesa}</select></td>
+                            <td class="p-2 align-top"><div onclick="editPegawaiJadwal('${j.id}')" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded cursor-pointer hover:border-blue-500 min-h-[30px] flex items-center justify-between transition-colors shadow-inner"><span class="truncate pr-2">${escJS(j.pegawai).replace(/ \| /g, ', ') || '- Pilih Petugas -'}</span><i data-lucide="chevron-down" class="inline-block text-[10px] text-gray-500 shrink-0"></i></div></td>
+                            <td class="p-2 align-top"><input type="number" value="${j.dana || ''}" onchange="updateJadwalField('${j.id}', 'dana', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none text-right"></td>
+                            <td class="p-2 align-top text-center flex flex-col gap-1 items-center">
+                                <div class="flex gap-1 w-full flex-wrap justify-center">
+                                    <button onclick="printSPPD('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-colors py-1 px-1.5" title="Cetak SPPD">SPPD</button>
+                                    <button onclick="printRILL('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600 hover:text-white transition-colors py-1 px-1.5" title="Cetak RILL">RILL</button>
+                                    <button onclick="printSP('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-600 hover:text-white transition-colors py-1 px-1.5" title="Cetak Surat Pernyataan">SP</button>
+                                </div>
+                                <button onclick="hapusJadwalItem('${j.id}')" class="w-full text-[10px] font-bold rounded bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-600 hover:text-white transition-colors py-1 mt-1"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i> Hapus</button>
+                            </td>
+                        </tr>`;
+                    } else {
+                        html += `<tr class="${isExpanded ? '' : 'hidden'} jadwal-group-${gIdx} hover:bg-white/5 transition-colors border-b border-brand-border/50"><td class="p-4 pl-14 align-top whitespace-nowrap"><span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-xs font-bold">${formatShortDate(j.tanggal) || '-'}</span></td><td class="p-4 align-top text-xs text-purple-400 font-semibold">${escJS(j.program) || '-'}</td><td class="p-4 align-top font-bold text-white">${escJS(j.kegiatan)}</td><td class="p-4 align-top text-gray-400">${escJS(j.desa)}</td><td class="p-4 align-top text-emerald-400 font-medium">${escJS(j.pegawai).replace(/ \| /g, ', ')}</td><td class="p-4 align-top text-right text-gray-300 font-semibold whitespace-nowrap">${j.dana ? formatRp(j.dana) : '-'}</td><td class="p-2 align-top text-center align-middle">
+<div class="flex gap-1 w-full flex-wrap justify-center mt-1">
+<button onclick="event.stopPropagation(); printSPPD('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-colors py-1 px-1.5" title="Cetak SPPD">SPPD</button>
+<button onclick="event.stopPropagation(); printRILL('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600 hover:text-white transition-colors py-1 px-1.5" title="Cetak RILL">RILL</button>
+<button onclick="event.stopPropagation(); printSP('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-600 hover:text-white transition-colors py-1 px-1.5" title="Cetak Surat Pernyataan">SP</button>
+</div>
+</td></tr>`;
+                    }
+                });
             }
             tbody.innerHTML = html;
+            setTimeout(refreshLucideIcons, 10);
         };
 
 
-        // --- MANAJEMEN PROGRAM ---
+                // --- MANAJEMEN PROGRAM ---
         function updateSelectProgram() {
             const selMain = document.getElementById('program'); const selQuick = document.getElementById('quickProgram');
             let html = '<option value="">Pilih Program (Umum)</option>'; (masterProgram || []).filter(Boolean).forEach(p => { html += `<option value="${escJS(p.nama)}" data-anggaran="${p.anggaran}">${escJS(p.nama)}</option>`; });
@@ -3675,6 +3777,93 @@
         // --- END LUCIDE ---
 
     </script>
+
+    <!-- PRINT AREA SURAT PERNYATAAN -->
+    <div id="spPrintArea" style="font-family: 'Times New Roman', Times, serif; color: black; line-height: 1.5; font-size: 12pt; background: white; padding: 2cm 2.5cm;">
+        <div style="text-align: center; font-weight: bold; margin-bottom: 30px;">
+            <p style="margin: 0; text-decoration: underline;">SURAT PERNYATAAN TANGGUNG JAWAB PERJALANAN DINAS</p>
+        </div>
+
+        <p style="margin-top: 0; margin-bottom: 10px;">Yang bertanda tangan dibawah ini :</p>
+        
+        <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse; font-size: 12pt;">
+            <tr>
+                <td style="width: 200px; vertical-align: top; padding: 2px 0;">Nama</td>
+                <td style="width: 20px; vertical-align: top; padding: 2px 0;">:</td>
+                <td style="vertical-align: top; padding: 2px 0;" class="vsmSpPgwNama">-</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 2px 0;" class="vsmSpPgwNipLabel">NIP/PPPK</td>
+                <td style="vertical-align: top; padding: 2px 0;">:</td>
+                <td style="vertical-align: top; padding: 2px 0;" class="vsmSpPgwNipVal">-</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 2px 0;">Pangkat/Golongan</td>
+                <td style="vertical-align: top; padding: 2px 0;">:</td>
+                <td style="vertical-align: top; padding: 2px 0;" class="vsmSpPgwPangkat">-</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 2px 0;">Jabatan</td>
+                <td style="vertical-align: top; padding: 2px 0;">:</td>
+                <td style="vertical-align: top; padding: 2px 0;" class="vsmSpPgwJabatan">-</td>
+            </tr>
+        </table>
+
+        <p style="margin-top: 0; margin-bottom: 10px;">Dengan ini menyatakan dengan sesungguhnya bahwa :</p>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12pt;">
+            <tr>
+                <td style="vertical-align: top; width: 30px; padding: 2px 0;">1)</td>
+                <td style="vertical-align: top; text-align: justify; padding: 2px 0;">
+                    Sehubungan Dengan Surat Perintah Tugas Nomor : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/SPT/DD/WB/<span class="vsmSpBulanTahunRomawi"></span>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; width: 30px; padding: 2px 0;">2)</td>
+                <td style="vertical-align: top; text-align: justify; padding: 2px 0;">
+                    Surat Perjalanan Dinas Nomor : <span class="vsmSpNomor"></span> Tanggal <span class="vsmSpTanggal"></span>, maka saya telah melakukan perjalanan dinas dimaksud.
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; width: 30px; padding: 2px 0;">3)</td>
+                <td style="vertical-align: top; text-align: justify; padding: 2px 0;">
+                    Saya bertanggung jawab sepenuhnya atas kebenaran seluruh penggunaan biaya perjalanan dinas, maka sehubungan dengan hal tersebut saya menyatakan bahwa saya tidak melakukan :
+                    <table style="width: 100%; margin-top: 5px; border-collapse: collapse; font-size: 12pt;">
+                        <tr>
+                            <td style="vertical-align: top; width: 25px;">a)</td>
+                            <td>Pemalsuan Dokumen</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">b)</td>
+                            <td>Tindakan berupa menaikan dari harga sebenarnya (Mark-up)</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">c)</td>
+                            <td>Perjalanan dinas rangkap (dua kali atau lebih)</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">d)</td>
+                            <td>Hal-hal lain yang berakibat kerugian Daerah/Negara sehubungan dengan pelaksanaan perjalanan dinas dimaksud</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <p style="text-align: justify; margin-bottom: 40px; text-indent: 40px;">
+            Demikian pernyataan ini saya buat dengan sesungguhnya, dan apabila dikemudian hari terbukti pernyataan ini tidak benar, saya bersedia menerima sanksi sesuai peraturan perundang-undangan.
+        </p>
+
+        <div style="display: flex; justify-content: flex-end; width: 100%;">
+            <div style="text-align: center; width: 300px;">
+                <p style="margin: 0; margin-bottom: 5px; font-weight: bold;">Silian , <span class="vsmSpTglTtd"></span></p>
+                <p style="margin: 0; font-weight: bold; margin-bottom: 80px;">Yang Membuat Pernyataan,</p>
+                <p style="margin: 0; font-weight: bold;" class="vsmSpPgwNama">-</p>
+                <p style="margin: 0; font-weight: bold;" class="vsmSpPgwNipTtd">-</p>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
