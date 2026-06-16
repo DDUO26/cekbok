@@ -1675,6 +1675,7 @@
 
         let db, fbCollection, fbDoc, fbSetDoc, fbDeleteDoc, fbOnSnapshot;
         let appId, currentUser, useFirebase = false;
+        let _fbWriteLock = 0; // Timestamp lock: ignore Firebase snapshots for 5s after local writes
 
         let isAdmin = localStorage.getItem('soLengkapAdmin') === 'true';
         let globalAdminPwd = localStorage.getItem('soLengkapPwd') || 'admin';
@@ -1860,83 +1861,66 @@
                 localStorage.setItem('fb_migrated_v19', 'true');
             }
         }
+        function _isFbLocked() { return Date.now() - _fbWriteLock < 5000; }
         function setupRealtimeListeners() {
             if (!useFirebase || !currentUser) return;
-            let isFirstBokSnapshot = true;
             fbOnSnapshot(fbCollection(db, 'artifacts', appId, 'public', 'data', 'bokData'), (snapshot) => {
+                if (_isFbLocked()) return;
                 let incoming = []; snapshot.forEach(d => incoming.push(d.data()));
                 if (snapshot.empty && dataBerkas.length > 0) {
-                    // Firebase is empty but we have local data — push local to Firebase
-                    dataBerkas.forEach(d => addOrUpdateBokRecord(d));
-                    isFirstBokSnapshot = false;
+                    _fbWriteLock = Date.now();
+                    dataBerkas.forEach(d => { if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id), d); });
                     return;
                 }
-                if (incoming.length > 0) {
-                    if (isFirstBokSnapshot && dataBerkas.length > 0 && incoming.length < dataBerkas.length) {
-                        // First snapshot has FEWER records than local — merge to avoid data loss
-                        const incomingIds = new Set(incoming.map(d => d.id));
-                        const localOnly = dataBerkas.filter(d => d.id && !incomingIds.has(d.id));
-                        localOnly.forEach(d => addOrUpdateBokRecord(d)); // push missing records to Firebase
-                        dataBerkas = [...incoming, ...localOnly];
-                    } else {
-                        dataBerkas = incoming;
-                    }
-                    saveDataLocal();
-                }
-                isFirstBokSnapshot = false;
+                if (incoming.length > 0) { dataBerkas = incoming; saveDataLocal(); }
                 updateFilterTahunOptions(); updateDashFilterTahun(); window.renderTable?.(); window.renderDashboard?.();
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), (docSnap) => {
+                if (_isFbLocked()) return;
                 if (docSnap.exists()) {
                     let incoming = docSnap.data().names || [];
-                    if (incoming.length === 0 && masterPegawai.length > 0) { saveMasterData(); return; }
-                    masterPegawai = incoming.map(m => typeof m === 'string' ? { nama: m, nip: '', pangkat: '', jabatan: '', status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: '' } : m);
-                    localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai));
-                    const currentSelect = document.getElementById('namaPegawai')?.value; updateSelectPegawai();
-                    if (currentSelect && (masterPegawai || []).find(m => m && m.nama === currentSelect)) { const e = document.getElementById('namaPegawai'); if (e) e.value = currentSelect; }
-                    window.renderMasterPegawai?.(); window.renderDashboard?.();
-                } else if (masterPegawai.length > 0) { saveMasterData(); }
+                    if (incoming.length > 0) {
+                        masterPegawai = incoming.map(m => typeof m === 'string' ? { nama: m, nip: '', pangkat: '', jabatan: '', status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: '' } : m);
+                        localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai));
+                        const currentSelect = document.getElementById('namaPegawai')?.value; updateSelectPegawai();
+                        if (currentSelect && (masterPegawai || []).find(m => m && m.nama === currentSelect)) { const e = document.getElementById('namaPegawai'); if (e) e.value = currentSelect; }
+                        window.renderMasterPegawai?.(); window.renderDashboard?.();
+                    }
+                }
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), (docSnap) => {
-                if (docSnap.exists()) {
-                    let incoming = docSnap.data().programs || [];
-                    if (incoming.length === 0 && masterProgram.length > 0) { saveMasterProgram(); return; }
-                    masterProgram = incoming; localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); window.renderMasterProgram?.(); updateSelectProgram();
-                } else if (masterProgram.length > 0) { saveMasterProgram(); }
+                if (_isFbLocked()) return;
+                if (docSnap.exists()) { let incoming = docSnap.data().programs || []; if (incoming.length > 0) { masterProgram = incoming; localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); window.renderMasterProgram?.(); updateSelectProgram(); } }
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterDesa', 'list'), (docSnap) => {
+                if (_isFbLocked()) return;
                 if (docSnap.exists()) {
                     let incoming = docSnap.data().desa || [];
-                    if (incoming.length === 0 && masterDesa.length > 0) { saveMasterDesa(); return; }
-                    masterDesa = incoming.map(d => typeof d === 'string' ? { namaDesa: d, kepalaDesa: '.......................................' } : d);
-                    localStorage.setItem('bokMasterDesa', JSON.stringify(masterDesa));
-                    window.renderMasterDesa?.();
-                } else if (masterDesa.length > 0) { saveMasterDesa(); }
+                    if (incoming.length > 0) {
+                        masterDesa = incoming.map(d => typeof d === 'string' ? { namaDesa: d, kepalaDesa: '.......................................' } : d);
+                        localStorage.setItem('bokMasterDesa', JSON.stringify(masterDesa));
+                        window.renderMasterDesa?.();
+                    }
+                }
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), (docSnap) => {
-                if (docSnap.exists()) {
-                    let incoming = docSnap.data().records || [];
-                    if (incoming.length === 0 && dataNihil.length > 0) { saveNihilData(); return; }
-                    dataNihil = incoming; localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); window.renderDashboard?.(); window.renderTable?.();
-                } else if (dataNihil.length > 0) { saveNihilData(); }
+                if (_isFbLocked()) return;
+                if (docSnap.exists()) { let incoming = docSnap.data().records || []; if (incoming.length > 0 || dataNihil.length === 0) { dataNihil = incoming; localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); window.renderDashboard?.(); window.renderTable?.(); } }
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'jadwal', 'list'), (docSnap) => {
-                if (docSnap.exists()) {
-                    let incoming = docSnap.data().records || [];
-                    if (incoming.length === 0 && dataJadwal.length > 0) { saveJadwalData(); return; }
-                    dataJadwal = incoming; localStorage.setItem('bokJadwal', JSON.stringify(dataJadwal)); window.renderJadwal?.(); window.renderTable?.(); window.renderDashboard?.();
-                } else if (dataJadwal.length > 0) { saveJadwalData(); }
+                if (_isFbLocked()) return;
+                if (docSnap.exists()) { let incoming = docSnap.data().records || []; if (incoming.length > 0 || dataJadwal.length === 0) { dataJadwal = incoming; localStorage.setItem('bokJadwal', JSON.stringify(dataJadwal)); window.renderJadwal?.(); window.renderTable?.(); window.renderDashboard?.(); } }
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'config'), (docSnap) => { if (docSnap.exists() && docSnap.data().adminPassword) { globalAdminPwd = docSnap.data().adminPassword; localStorage.setItem('soLengkapPwd', globalAdminPwd); } });
         }
-        function addOrUpdateBokRecord(record) { if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record); saveDataLocal(); }
-        function deleteBokRecord(id) { if (useFirebase && currentUser) fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', id)); saveDataLocal(); }
-        function saveMasterData() { localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), { names: masterPegawai }); }
-        function saveMasterProgram() { localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), { programs: masterProgram }); }
-        function saveMasterDesa() { localStorage.setItem('bokMasterDesa', JSON.stringify(masterDesa)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterDesa', 'list'), { desa: masterDesa }); }
-        function saveNihilData() { localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), { records: dataNihil }); }
-        function saveJadwalData() { localStorage.setItem('bokJadwal', JSON.stringify(dataJadwal)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'jadwal', 'list'), { records: dataJadwal }); }
-        function saveDataLocal() { localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas)); }
+        function addOrUpdateBokRecord(record) { _fbWriteLock = Date.now(); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', record.id), record); saveDataLocal(); }
+        function deleteBokRecord(id) { _fbWriteLock = Date.now(); if (useFirebase && currentUser) fbDeleteDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', id)); saveDataLocal(); }
+        function saveMasterData() { _fbWriteLock = Date.now(); localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), { names: masterPegawai }); }
+        function saveMasterProgram() { _fbWriteLock = Date.now(); localStorage.setItem('bokMasterProgram', JSON.stringify(masterProgram)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterProgram', 'list'), { programs: masterProgram }); }
+        function saveMasterDesa() { _fbWriteLock = Date.now(); localStorage.setItem('bokMasterDesa', JSON.stringify(masterDesa)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterDesa', 'list'), { desa: masterDesa }); }
+        function saveNihilData() { _fbWriteLock = Date.now(); localStorage.setItem('bokNihilV2', JSON.stringify(dataNihil)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'dataNihil', 'list'), { records: dataNihil }); }
+        function saveJadwalData() { _fbWriteLock = Date.now(); localStorage.setItem('bokJadwal', JSON.stringify(dataJadwal)); if (useFirebase && currentUser) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'jadwal', 'list'), { records: dataJadwal }); }
+        function saveDataLocal() { _fbWriteLock = Date.now(); localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas)); }
 
         function loadDataLocal() {
             const savedMaster = localStorage.getItem('bokMasterPegawai');
@@ -3051,12 +3035,15 @@
                     let tempDesa = data.masterDesa || [];
                     masterDesa = tempDesa.filter(Boolean).map(d => typeof d === 'string' ? { namaDesa: d, kepalaDesa: '.......................................' } : d);
 
+                    _fbWriteLock = Date.now(); // Lock Firebase listeners during restore
                     saveDataLocal();
                     if (typeof saveMasterData === 'function') saveMasterData();
                     if (typeof saveMasterProgram === 'function') saveMasterProgram();
                     if (typeof saveMasterDesa === 'function') saveMasterDesa();
                     if (typeof saveNihilData === 'function') saveNihilData();
                     if (typeof saveJadwalData === 'function') saveJadwalData();
+                    // Also push bokData records to Firebase (saveDataLocal only saves to localStorage)
+                    if (useFirebase && currentUser) { dataBerkas.forEach(d => { if (d && d.id) fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id), d); }); }
 
                     window.updateSelectPegawai?.();
                     window.updateSelectProgram?.();
