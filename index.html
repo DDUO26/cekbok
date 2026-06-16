@@ -2592,13 +2592,13 @@
 
                 json.forEach((row, rowIndex) => {
                     if (rowIndex === 0 || rowIndex === 1 || rowIndex === 2 || rowIndex === 3) return;
-                    let progRaw = row[1]; let kegDesaRaw = row[2]; let peg = row[3]; let tglRaw = row[4]; let dana = row[5];
+                    let progRaw = row[1]; let desaSub = row[2]; let peg = row[3]; let tglRaw = row[4]; let dana = row[5];
 
                     if (progRaw && typeof progRaw === 'string') {
                         currentProgram = progRaw.trim();
                     }
-                    if (kegDesaRaw && typeof kegDesaRaw === 'string' && !tglRaw) {
-                        currentKegiatan = kegDesaRaw.trim();
+                    if (desaSub && typeof desaSub === 'string' && !tglRaw) {
+                        currentKegiatan = desaSub.trim();
                     }
 
                     if (tglRaw && desaSub) {
@@ -2639,7 +2639,7 @@
                         parsedData.push({
                             id: 'JDW_' + Date.now() + Math.random().toString(36).substr(2, 5),
                             program: currentProgram || progRaw || 'Program Umum',
-                            kegiatan: currentKegiatan || kegDesaRaw || 'Kegiatan Umum',
+                            kegiatan: currentKegiatan || 'Kegiatan Umum',
                             desa: desClean,
                             pegawai: normalizedPetugas.length > 0 ? normalizedPetugas.join(' | ') : '-',
                             tanggal: tglFormat,
