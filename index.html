@@ -8,7 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        /* Lucide icon sizing defaults */
+        [data-lucide] { display: inline-block; vertical-align: middle; }
+        .lucide-sm { width: 14px; height: 14px; }
+        .lucide-md { width: 18px; height: 18px; }
+        .lucide-lg { width: 20px; height: 20px; }
+        .lucide-xl { width: 24px; height: 24px; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -834,7 +842,7 @@
             <div class="h-20 flex items-center px-6 border-b border-brand-border shrink-0">
                 <div
                     class="bg-blue-600/20 text-blue-400 w-10 h-10 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.2)] border border-blue-500/30 mr-3 shrink-0">
-                    <i class="fas fa-shield-check text-xl"></i>
+                    <i data-lucide="shield-check" class="w-5 h-5 inline-block"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-white tracking-tight truncate leading-tight">So Lengkap?</h1>
@@ -846,30 +854,30 @@
                 <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Menu Utama</p>
                 <button onclick="switchTab('dashboard')" id="btnTabDashboard"
                     class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-blue-600/20 to-transparent text-blue-400 border-l-2 border-blue-500 shadow-none hover:bg-white/5 relative">
-                    <i class="fas fa-home w-5"></i> Dashboard Publik
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 shrink-0"></i> Dashboard Publik
                 </button>
                 <button onclick="switchTab('jadwal')" id="btnTabJadwal"
                     class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 border-l-2 border-transparent hover:bg-white/5 hover:text-white">
-                    <i class="fas fa-calendar-alt w-5"></i> Jadwal Kegiatan
+                    <i data-lucide="calendar-days" class="w-5 h-5 shrink-0"></i> Jadwal Kegiatan
                 </button>
                 <button onclick="switchTab('data')" id="btnTabData"
                     class="admin-only hidden w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 border-l-2 border-transparent hover:bg-white/5 hover:text-white">
-                    <i class="fas fa-edit w-5"></i> Input & Rekap SPJ
+                    <i data-lucide="clipboard-check" class="w-5 h-5 shrink-0"></i> Input & Rekap SPJ
                 </button>
 
                 <div class="admin-only hidden">
                     <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-8 mb-3">Manajemen</p>
                     <button onclick="switchTab('pegawai')" id="btnTabPegawai"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 border-l-2 border-transparent hover:bg-white/5 hover:text-white">
-                        <i class="fas fa-users w-5"></i> Daftar Pegawai
+                        <i data-lucide="users" class="w-5 h-5 shrink-0"></i> Daftar Pegawai
                     </button>
                     <button onclick="switchTab('program')" id="btnTabProgram"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 border-l-2 border-transparent hover:bg-white/5 hover:text-white">
-                        <i class="fas fa-list-alt w-5"></i> Daftar Program
+                        <i data-lucide="folder-kanban" class="w-5 h-5 shrink-0"></i> Daftar Program
                     </button>
                     <button onclick="switchTab('desa')" id="btnTabDesa"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-400 border-l-2 border-transparent hover:bg-white/5 hover:text-white">
-                        <i class="fas fa-map-marker-alt w-5"></i> Daftar Desa
+                        <i data-lucide="map-pinned" class="w-5 h-5 shrink-0"></i> Daftar Desa
                     </button>
                 </div>
             </nav>
@@ -890,7 +898,7 @@
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()"
                     class="admin-only hidden md:hidden bg-brand-panel text-white border border-brand-border w-10 h-10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors shrink-0">
-                    <i class="fas fa-bars"></i>
+                    <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
 
                 <div class="flex flex-col justify-center">
@@ -901,7 +909,7 @@
                         <span id="currentDate"></span>
                         <span id="cloudStatusBadge"
                             class="hidden items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold border border-emerald-500/30">
-                            <i class="fas fa-circle text-[6px]"></i> ONLINE
+                            <i data-lucide="circle-dot" class="w-3 h-3"></i> ONLINE
                         </span>
                     </p>
                 </div>
@@ -912,24 +920,24 @@
                 <div class="hidden lg:flex items-center gap-2 mr-4">
                     <button onclick="switchTab('data')"
                         class="bg-[#1A2235] border border-brand-border hover:border-blue-500 text-gray-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm">
-                        <i class="fas fa-plus mr-1 text-blue-400"></i> Input SPJ
+                        <i data-lucide="square-pen" class="w-3.5 h-3.5 mr-1 text-blue-400 inline-block"></i> Input SPJ
                     </button>
                     <button onclick="switchTab('jadwal')"
                         class="bg-[#1A2235] border border-brand-border hover:border-emerald-500 text-gray-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm">
-                        <i class="fas fa-calendar-alt mr-1 text-emerald-400"></i> Jadwal
+                        <i data-lucide="calendar-check-2" class="w-3.5 h-3.5 mr-1 text-emerald-400 inline-block"></i> Jadwal
                     </button>
                 </div>
 
                 <div class="hidden md:flex relative w-48 group z-50">
                     <i
-                        class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs"></i>
+                        data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
                     <input type="text" id="globalSearchInput" placeholder="Cari..."
                         class="w-full bg-[#1A2235]/50 border border-brand-border text-white text-xs rounded-full pl-9 pr-8 py-2 outline-none focus:border-blue-500 focus:bg-[#1A2235] transition-all"
                         onkeyup="handleGlobalSearch(this.value)" onfocus="handleGlobalSearch(this.value)"
                         onblur="setTimeout(()=>closeGlobalSearch(), 200)">
                     <button onclick="document.getElementById('globalSearchInput').value=''; closeGlobalSearch();"
                         class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-white">
-                        <i class="fas fa-times"></i>
+                        <i data-lucide="x" class="w-4 h-4 inline-block"></i>
                     </button>
                     <ul id="globalSearchDropdown"
                         class="absolute top-full left-0 w-full mt-2 bg-[#1A2235] border border-brand-border rounded-xl shadow-2xl hidden max-h-60 overflow-y-auto custom-scrollbar overflow-hidden">
@@ -937,14 +945,14 @@
                 </div>
 
                 <button onclick="openSettingsModal()" class="text-gray-400 hover:text-white transition-colors">
-                    <i class="fas fa-cog text-lg hover:rotate-90 transition-transform duration-300"></i>
+                    <i data-lucide="settings" class="w-3.5 h-3.5 inline-block text-lg hover:rotate-90 transition-transform duration-300"></i>
                 </button>
 
                 <div class="h-8 w-px bg-brand-border mx-1"></div>
 
                 <button onclick="toggleAdmin()" id="btnLogin"
                     class="public-only bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg transition-all flex items-center gap-2 transform hover:-translate-y-0.5">
-                    <i class="fas fa-lock"></i> <span>Login</span>
+                    <i data-lucide="lock" class="w-4 h-4 inline-block"></i> <span>Login</span>
                 </button>
 
                 <div class="admin-only hidden items-center gap-3 cursor-pointer group" onclick="toggleAdmin()">
@@ -972,7 +980,7 @@
                         <div class="p-5 border-b border-brand-border">
                             <h2 class="text-base font-bold text-white flex items-center gap-3">
                                 <div class="bg-blue-500/20 text-blue-400 p-2 rounded-lg"><i
-                                        class="fas fa-file-medical"></i></div> Input SPJ Baru
+                                        data-lucide="file-plus-2" class="w-3.5 h-3.5 inline-block"></i></div> Input SPJ Baru
                             </h2>
                         </div>
                         <div class="p-5">
@@ -980,7 +988,7 @@
                                 <div
                                     class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
                                     <div class="flex items-center gap-2">
-                                        <i class="fas fa-bolt text-yellow-400"></i>
+                                        <i data-lucide="zap" class="w-3.5 h-3.5 inline-block text-yellow-400"></i>
                                         <span class="text-[10px] font-bold text-blue-200">Mode Borongan</span>
                                     </div>
                                     <label class="relative inline-flex items-center cursor-pointer">
@@ -1052,7 +1060,7 @@
                                         class="px-4 py-2.5 rounded-xl border border-brand-border text-gray-400 font-bold text-sm hover:bg-white/5 transition-colors">Reset</button>
                                     <button type="submit"
                                         class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-[0_4px_15px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 transform active:scale-95 text-sm">
-                                        <i class="fas fa-paper-plane"></i> Simpan
+                                        <i data-lucide="send" class="w-3.5 h-3.5 inline-block"></i> Simpan
                                     </button>
                                 </div>
                             </form>
@@ -1073,26 +1081,26 @@
                             <div class="bg-[#0A0F1C] p-1 rounded-xl flex w-full sm:w-auto border border-brand-border">
                                 <button id="btnViewMatrix" onclick="setView('matrix')"
                                     class="px-4 py-2 text-xs font-bold rounded-lg bg-brand-panel shadow-sm text-blue-400 transition-all flex-1 sm:flex-none text-center"><i
-                                        class="fas fa-th-large mr-1"></i> Matriks</button>
+                                        data-lucide="layout-grid" class="w-3.5 h-3.5 inline-block mr-1"></i> Matriks</button>
                                 <button id="btnViewList" onclick="setView('list')"
                                     class="px-4 py-2 text-xs font-bold rounded-lg text-gray-500 hover:text-white transition-all flex-1 sm:flex-none text-center"><i
-                                        class="fas fa-list mr-1"></i> List</button>
+                                        data-lucide="list" class="w-3.5 h-3.5 inline-block mr-1"></i> List</button>
                             </div>
                             <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                                 <select id="filterTahun"
                                     class="bg-[#0A0F1C] text-white border border-brand-border focus:border-blue-500 rounded-xl text-sm font-bold py-2 px-3 outline-none flex-1 sm:w-28 cursor-pointer transition-colors"></select>
                                 <div class="relative flex-1 sm:w-48 flex items-center">
-                                    <i class="fas fa-search absolute left-3 text-white text-xs"></i>
+                                    <i data-lucide="search" class="w-3 h-3 inline-block absolute left-3 text-white"></i>
                                     <input type="text" id="searchInput" placeholder="Cari..."
                                         class="bg-[#0A0F1C] text-white border border-brand-border focus:border-blue-500 rounded-xl pl-9 pr-8 py-2 text-sm w-full outline-none transition-colors">
                                     <button
                                         onclick="document.getElementById('searchInput').value=''; window.renderTable?.();"
                                         class="absolute right-3 text-slate-500 hover:text-white"><i
-                                            class="fas fa-times"></i></button>
+                                            data-lucide="x" class="w-3.5 h-3.5 inline-block"></i></button>
                                 </div>
                                 <button onclick="exportToCSV()"
                                     class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition-all shrink-0"
-                                    title="Export Excel"><i class="fas fa-file-excel"></i></button>
+                                    title="Export Excel"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 inline-block"></i></button>
                             </div>
                         </div>
                     </div>
@@ -1106,7 +1114,7 @@
                         <div id="emptyState" class="hidden flex-col items-center justify-center p-16 text-center">
                             <div
                                 class="w-20 h-20 bg-brand-panel border border-brand-border rounded-full flex items-center justify-center mb-4">
-                                <i class="fas fa-folder-open text-3xl text-gray-600"></i>
+                                <i data-lucide="folder-open" class="w-3.5 h-3.5 inline-block text-3xl text-gray-600"></i>
                             </div>
                             <h3 class="text-lg font-bold text-white">Belum Ada Rekapan</h3>
                             <p class="text-sm text-gray-500 mt-1">Data belum dimasukkan pada filter ini.</p>
@@ -1122,7 +1130,7 @@
                         </div>
                         <button onclick="clearAllData()"
                             class="text-red-400 hover:text-red-300 font-bold transition-colors flex items-center gap-1.5"><i
-                                class="fas fa-trash-alt"></i> Hapus Semua</button>
+                                data-lucide="trash-2" class="w-3.5 h-3.5 inline-block"></i> Hapus Semua</button>
                     </div>
                 </div>
             </main>
@@ -1140,7 +1148,7 @@
                             class="flex items-center gap-2 bg-[#131A2B] border border-brand-border p-1.5 rounded-xl shadow-sm">
                             <div
                                 class="bg-blue-600/20 text-blue-400 w-8 h-8 rounded-lg flex items-center justify-center">
-                                <i class="far fa-calendar-alt"></i>
+                                <i data-lucide="calendar-days" class="w-3.5 h-3.5 inline-block"></i>
                             </div>
                             <span class="text-sm font-medium text-gray-400 px-2">Periode</span>
                             <select id="dashFilterBulan"
@@ -1185,12 +1193,11 @@
                                 <div class="flex items-start justify-between mb-4 relative z-10">
                                     <div
                                         class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center backdrop-blur-md shadow-inner">
-                                        <img src="wallet.png" alt="Wallet"
-                                            class="w-8 h-8 object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                                        <i data-lucide="wallet-cards" class="w-7 h-7 text-blue-400 drop-shadow-lg transition-transform duration-300 group-hover:scale-110"></i>
                                     </div>
                                     <span
                                         class="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20 flex items-center gap-1">
-                                        <i class="fas fa-chart-line"></i> Tahun Ini
+                                        <i data-lucide="trending-up" class="w-3 h-3 inline-block"></i> Tahun Ini
                                     </span>
                                 </div>
                                 <div class="relative z-10">
@@ -1211,8 +1218,7 @@
                                 <div class="flex items-start justify-between mb-4 relative z-10">
                                     <div
                                         class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md shadow-inner">
-                                        <img src="berkas banyak.png" alt="Berkas Banyak"
-                                            class="w-8 h-8 object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110">
+                                        <i data-lucide="file-check-2" class="w-7 h-7 text-emerald-400 drop-shadow-lg transition-transform duration-300 group-hover:scale-110"></i>
                                     </div>
                                     <span
                                         class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20"
@@ -1243,8 +1249,7 @@
                                 <div class="flex items-start justify-between mb-4 relative z-10">
                                     <div
                                         class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center backdrop-blur-md shadow-inner">
-                                        <img src="jam.png" alt="Jam"
-                                            class="w-8 h-8 object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
+                                        <i data-lucide="file-clock" class="w-7 h-7 text-rose-400 drop-shadow-lg transition-transform duration-300 group-hover:scale-110"></i>
                                     </div>
                                     <span
                                         class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 text-[10px] font-bold border border-rose-500/20"
@@ -1275,7 +1280,7 @@
                                     <div
                                         class="w-12 h-12 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-center justify-center backdrop-blur-md shadow-inner text-slate-300">
                                         <i
-                                            class="fas fa-bed text-xl drop-shadow-lg transition-transform duration-300 group-hover:scale-110"></i>
+                                            data-lucide="circle-slash" class="w-7 h-7 drop-shadow-lg transition-transform duration-300 group-hover:scale-110"></i>
                                     </div>
                                     <span
                                         class="px-2.5 py-1 rounded-full bg-slate-500/10 text-slate-400 text-[10px] font-bold border border-slate-500/20"
@@ -1304,7 +1309,7 @@
                                 <div class="flex items-center gap-3">
                                     <div
                                         class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
-                                        <i class="fas fa-file-signature text-xl"></i>
+                                        <i data-lucide="file-pen-line" class="w-5 h-5 inline-block"></i>
                                     </div>
                                     <div>
                                         <h2 class="text-xl font-bold text-white tracking-tight">Status Penyetoran SPJ
@@ -1338,7 +1343,7 @@
                                                 <div class="flex items-center gap-2">
                                                     <div
                                                         class="w-6 h-6 rounded-lg border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                                                        <i class="fas fa-check text-[10px]"></i>
+                                                        <i data-lucide="check" class="w-3 h-3 inline-block"></i>
                                                     </div>
                                                     <span
                                                         class="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">Lengkap
@@ -1366,7 +1371,7 @@
                                                 <div class="flex items-center gap-2">
                                                     <div
                                                         class="w-6 h-6 rounded-lg border border-amber-500/30 bg-amber-500/10 flex items-center justify-center text-amber-400">
-                                                        <i class="fas fa-clock text-[10px]"></i>
+                                                        <i data-lucide="clock" class="w-3 h-3 inline-block"></i>
                                                     </div>
                                                     <span
                                                         class="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">Belum
@@ -1392,7 +1397,7 @@
                                                 <div class="flex items-center gap-2">
                                                     <div
                                                         class="w-6 h-6 rounded-lg border border-red-500/30 bg-red-500/10 flex items-center justify-center text-red-400">
-                                                        <i class="fas fa-times text-[10px]"></i>
+                                                        <i data-lucide="x" class="w-3 h-3 inline-block"></i>
                                                     </div>
                                                     <span
                                                         class="text-xs font-bold text-white group-hover:text-red-400 transition-colors">Belum
@@ -1418,7 +1423,7 @@
                                                 <div class="flex items-center gap-2">
                                                     <div
                                                         class="w-6 h-6 rounded-lg border border-slate-500/30 bg-slate-500/10 flex items-center justify-center text-slate-400">
-                                                        <i class="fas fa-bed text-[10px]"></i>
+                                                        <i data-lucide="circle-slash" class="w-3 h-3 inline-block"></i>
                                                     </div>
                                                     <span
                                                         class="text-xs font-bold text-white group-hover:text-slate-400 transition-colors">Status
@@ -1445,8 +1450,7 @@
                                         class="relative w-full max-w-[220px] bg-gradient-to-b from-[#132A27] to-[#0D181A] border border-emerald-500/20 rounded-2xl p-6 pt-12 shadow-[0_15px_30px_rgba(0,0,0,0.5)] flex flex-col items-center">
                                         <div
                                             class="absolute -top-8 w-20 h-20 bg-gradient-to-br from-emerald-400/20 to-emerald-600/20 backdrop-blur-md rounded-2xl border border-emerald-400/50 flex items-center justify-center shadow-[0_10px_25px_rgba(16,185,129,0.3)]">
-                                            <img src="berkas banyak.png" alt="Berkas Banyak"
-                                                class="w-14 h-14 object-contain drop-shadow-[0_5px_15px_rgba(16,185,129,0.4)] transition-transform hover:scale-110">
+                                            <i data-lucide="file-check-2" class="w-7 h-7 text-emerald-400 drop-shadow-lg transition-transform duration-300 group-hover:scale-110"></i>
                                         </div>
                                         <p class="text-xs text-slate-300 mb-1 font-medium">Sudah Lengkap</p>
                                         <h3 class="text-5xl font-black text-emerald-400 mb-3 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]"
@@ -1485,7 +1489,7 @@
                                 </div>
                                 <div
                                     class="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/40 relative z-10 transform -rotate-3 transition-transform hover:rotate-0">
-                                    <i class="fas fa-rocket text-2xl"></i>
+                                    <i data-lucide="rocket" class="w-3.5 h-3.5 inline-block text-2xl"></i>
                                 </div>
                                 <div class="flex-1 text-center md:text-left relative z-10">
                                     <p class="text-[10px] text-blue-300 uppercase tracking-widest font-bold mb-1">
@@ -1514,7 +1518,7 @@
                                 <div class="flex items-center gap-3 mb-6 relative z-10">
                                     <div
                                         class="w-10 h-10 rounded-xl border border-blue-500/20 bg-blue-500/10 flex items-center justify-center text-blue-400 shadow-inner">
-                                        <i class="fas fa-chart-line text-lg"></i>
+                                        <i data-lucide="trending-up" class="w-3.5 h-3.5 inline-block text-lg"></i>
                                     </div>
                                     <div>
                                         <h3 class="font-bold text-white text-base">Tren Kepatuhan 6 Bulan Terakhir</h3>
@@ -1534,7 +1538,7 @@
                                     <div class="flex items-center gap-3">
                                         <div
                                             class="w-10 h-10 rounded-xl border border-emerald-500/20 bg-emerald-500/10 flex items-center justify-center text-emerald-400 shadow-inner">
-                                            <i class="fas fa-chart-area text-lg"></i>
+                                            <i data-lucide="area-chart" class="w-3.5 h-3.5 inline-block text-lg"></i>
                                         </div>
                                         <div>
                                             <h3 class="font-bold text-white text-base">Serapan SPJ Per Bulan</h3>
@@ -1561,13 +1565,13 @@
                                         Anda di sini.</p>
                                 </div>
                                 <div class="relative w-full sm:w-64 flex items-center"><i
-                                        class="fas fa-search absolute left-3 text-slate-500 text-xs"></i><input
+                                        data-lucide="search" class="w-3 h-3 inline-block absolute left-3 text-slate-500"></i><input
                                         type="text" id="publicSearchInput" placeholder="Cari nama pegawai..."
                                         class="w-full bg-[#0A0F1C] border border-brand-border text-white text-xs rounded-lg pl-8 pr-8 py-2 outline-none focus:border-blue-500 transition-all"
                                         oninput="window.renderDashboard?.()"><button
                                         onclick="document.getElementById('publicSearchInput').value=''; window.renderDashboard?.();"
                                         class="absolute right-2 text-slate-500 hover:text-white"><i
-                                            class="fas fa-times"></i></button></div>
+                                            data-lucide="x" class="w-3.5 h-3.5 inline-block"></i></button></div>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse min-w-[800px] text-sm">
@@ -1599,7 +1603,7 @@
                         class="bg-gradient-to-r from-blue-700 to-indigo-900 px-6 sm:px-8 py-5 flex justify-between items-center text-white border-b border-blue-500/30 rounded-t-2xl">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-3"><i
-                                    class="fas fa-calendar-alt opacity-80 text-blue-300"></i> Jadwal Kegiatan</h2>
+                                    data-lucide="calendar-days" class="w-3.5 h-3.5 inline-block opacity-80 text-blue-300"></i> Jadwal Kegiatan</h2>
                             <p class="text-blue-200 text-xs mt-1">Daftar jadwal kegiatan BOK yang disinkronkan otomatis.
                             </p>
                         </div>
@@ -1614,7 +1618,7 @@
                         <div
                             class="admin-only hidden bg-blue-900/20 border border-blue-500/30 rounded-xl p-5 sm:p-6 mb-6">
                             <h3 class="text-base font-bold text-white mb-2"><i
-                                    class="fas fa-upload text-blue-400 mr-2"></i> Upload Jadwal Kegiatan (Admin)</h3>
+                                    data-lucide="upload" class="w-3.5 h-3.5 inline-block text-blue-400 mr-2"></i> Upload Jadwal Kegiatan (Admin)</h3>
                             <p class="text-xs text-slate-400 mb-4">Pilih Bulan & Tahun jadwal, lalu unggah file <b>Excel
                                     (.xlsx)</b>. Sistem akan otomatis mendeteksi Tanggal, Kegiatan, Desa, Pegawai, dan
                                 Dana. <br><span class="text-amber-400 font-bold mt-1 inline-block">Penting:</span>
@@ -1650,7 +1654,7 @@
                                         class="text-blue-400 ml-2"></span></h3>
                                 <button onclick="clearJadwal()"
                                     class="admin-only hidden text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 transition-all"><i
-                                        class="fas fa-trash"></i> Bersihkan Bulan Ini</button>
+                                        data-lucide="trash-2" class="w-3.5 h-3.5 inline-block"></i> Bersihkan Bulan Ini</button>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm border-collapse min-w-[800px]">
@@ -1674,7 +1678,7 @@
                         class="bg-gradient-to-r from-blue-700 to-blue-900 px-6 sm:px-8 py-5 flex justify-between items-center text-white border-b border-blue-500/30">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-3"><i
-                                    class="fas fa-users-cog opacity-80 text-blue-300"></i> Daftar Pegawai</h2>
+                                    data-lucide="user-round-cog" class="w-3.5 h-3.5 inline-block opacity-80 text-blue-300"></i> Daftar Pegawai</h2>
                             <p class="text-blue-200 text-xs mt-1">Lengkapi data agar SPPD terisi sempurna saat dicetak.
                             </p>
                         </div>
@@ -1686,7 +1690,7 @@
                         <form id="formMasterPegawai"
                             class="mb-8 bg-[#0A0F1C] p-6 rounded-2xl border border-brand-border flex flex-col gap-4">
                             <h3 class="text-sm font-bold text-gray-300 mb-1 border-b border-brand-border pb-2"><i
-                                    class="fas fa-user-plus mr-2"></i>Tambah Pegawai Baru</h3>
+                                    data-lucide="user-plus" class="w-3.5 h-3.5 inline-block mr-2"></i>Tambah Pegawai Baru</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs text-gray-500 mb-1 block">Nama Lengkap & Gelar <span
@@ -1715,14 +1719,14 @@
                             <div class="flex justify-end mt-2">
                                 <button type="submit"
                                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl shadow-[0_4px_15px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 text-sm"><i
-                                        class="fas fa-plus"></i> Simpan Pegawai</button>
+                                        data-lucide="plus" class="w-3.5 h-3.5 inline-block"></i> Simpan Pegawai</button>
                             </div>
                         </form>
                         <div>
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-3">
                                 <h3 class="font-bold text-white text-base">Daftar Pegawai Terdaftar</h3>
                                 <div class="relative w-full sm:w-64"><i
-                                        class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs"></i><input
+                                        data-lucide="search" class="w-3 h-3 inline-block absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i><input
                                         type="text" id="searchMaster" placeholder="Cari nama..."
                                         class="bg-[#0A0F1C] border border-brand-border rounded-xl pl-10 pr-4 py-2.5 text-sm w-full outline-none focus:border-blue-500 text-white"
                                         onkeyup="window.renderMasterPegawai?.()"></div>
@@ -1743,7 +1747,7 @@
                         class="bg-gradient-to-r from-emerald-600 to-teal-800 px-6 sm:px-8 py-5 flex justify-between items-center text-white border-b border-emerald-500/30">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-3"><i
-                                    class="fas fa-list-alt opacity-80 text-emerald-300"></i> Daftar Program BOK</h2>
+                                    data-lucide="folder-kanban" class="w-3.5 h-3.5 inline-block opacity-80 text-emerald-300"></i> Daftar Program BOK</h2>
                             <p class="text-emerald-100 text-xs mt-1">Kelola daftar program beserta patokan anggaran
                                 standarnya.</p>
                         </div>
@@ -1760,7 +1764,7 @@
                                 class="w-full md:w-48 bg-brand-panel border border-brand-border rounded-xl px-5 py-3 focus:ring-1 focus:ring-emerald-500 text-sm outline-none text-white">
                             <button type="submit"
                                 class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-xl shadow-[0_4px_15px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2 text-sm shrink-0"><i
-                                    class="fas fa-plus"></i> Tambah</button>
+                                    data-lucide="plus" class="w-3.5 h-3.5 inline-block"></i> Tambah</button>
                         </form>
                         <div>
                             <h3 class="font-bold text-white text-base mb-4">Daftar Program Terdaftar</h3>
@@ -1780,7 +1784,7 @@
                         class="bg-gradient-to-r from-purple-600 to-pink-800 px-6 sm:px-8 py-5 flex justify-between items-center text-white border-b border-purple-500/30">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-3"><i
-                                    class="fas fa-map-marker-alt opacity-80 text-purple-300"></i> Daftar Desa / Lokasi
+                                    data-lucide="map-pinned" class="w-3.5 h-3.5 inline-block opacity-80 text-purple-300"></i> Daftar Desa / Lokasi
                             </h2>
                             <p class="text-purple-200 text-xs mt-1">Lengkapi nama Kepala Desa untuk kebutuhan Visum
                                 SPPD.</p>
@@ -1799,7 +1803,7 @@
                                 class="w-full md:w-64 bg-brand-panel border border-brand-border rounded-xl px-5 py-3 focus:ring-1 focus:ring-purple-500 text-sm outline-none text-white">
                             <button type="submit"
                                 class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-3 rounded-xl shadow-[0_4px_15px_rgba(147,51,234,0.4)] transition-all flex items-center justify-center gap-2 text-sm shrink-0"><i
-                                    class="fas fa-plus"></i> Tambah</button>
+                                    data-lucide="plus" class="w-3.5 h-3.5 inline-block"></i> Tambah</button>
                         </form>
                         <div>
                             <h3 class="font-bold text-white text-base mb-4">Daftar Desa Terdaftar</h3>
@@ -1836,7 +1840,7 @@
                 </div>
                 <button onclick="closeDetailPegawai()"
                     class="w-10 h-10 bg-brand-panel border border-brand-border rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center shrink-0"><i
-                        class="fas fa-times text-lg"></i></button>
+                        data-lucide="x" class="w-3.5 h-3.5 inline-block text-lg"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 relative p-4 custom-scrollbar">
                 <div class="space-y-3" id="detailPegawaiList"></div>
@@ -1853,10 +1857,10 @@
             <div
                 class="bg-[#0A0F1C] px-6 py-5 flex justify-between items-center text-white shrink-0 border-b border-brand-border">
                 <h3 class="font-bold text-lg flex items-center gap-2" id="quickModalTitle"><i
-                        class="fas fa-edit text-blue-400"></i> Edit SPJ</h3>
+                        data-lucide="pencil" class="w-3.5 h-3.5 inline-block text-blue-400"></i> Edit SPJ</h3>
                 <button onclick="closeQuickModal()"
                     class="text-gray-400 hover:text-white transition-colors flex items-center justify-center"><i
-                        class="fas fa-times text-lg"></i></button>
+                        data-lucide="x" class="w-3.5 h-3.5 inline-block text-lg"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 custom-scrollbar relative">
                 <form id="quickForm" class="p-6 space-y-5">
@@ -1908,12 +1912,12 @@
                             class="w-1/3 bg-transparent border border-brand-border text-gray-400 py-3 rounded-xl font-bold text-sm hover:bg-white/5 transition-colors">Batal</button>
                         <button type="submit"
                             class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm shadow-[0_4px_15px_rgba(37,99,235,0.3)] flex justify-center items-center gap-2 transform active:scale-95 transition-all"><i
-                                class="fas fa-save"></i> Simpan SPJ</button>
+                                data-lucide="save" class="w-3.5 h-3.5 inline-block"></i> Simpan SPJ</button>
                     </div>
                     <div id="btnTandaiNihilContainer" class="mt-4 pt-4 border-t border-brand-border">
                         <button type="button" onclick="tandaiNihilDariModal()"
                             class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold text-sm border border-slate-700 transition-all flex items-center justify-center gap-2"><i
-                                class="fas fa-bed"></i> Tandai Bulan Ini NIHIL (Tidak Ada Kegiatan)</button>
+                                data-lucide="circle-slash" class="w-3.5 h-3.5 inline-block"></i> Tandai Bulan Ini NIHIL (Tidak Ada Kegiatan)</button>
                     </div>
                 </form>
             </div>
@@ -1929,12 +1933,12 @@
             <!-- Header -->
             <div class="flex items-center justify-between p-5 border-b border-brand-border">
                 <h2 class="text-base font-bold text-white flex items-center gap-3">
-                    <div class="bg-blue-500/20 text-blue-400 p-2 rounded-lg"><i class="fas fa-cog"></i></div>
+                    <div class="bg-blue-500/20 text-blue-400 p-2 rounded-lg"><i data-lucide="settings" class="w-4 h-4 inline-block"></i></div>
                     Pengaturan
                 </h2>
                 <button onclick="closeSettingsModal()"
                     class="text-gray-400 hover:text-white transition-colors w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
-                    <i class="fas fa-times"></i>
+                    <i data-lucide="x" class="w-4 h-4 inline-block"></i>
                 </button>
             </div>
             <!-- Body -->
@@ -1998,7 +2002,7 @@
                     </div>
                     <button onclick="saveSettingsKapus()"
                         class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-sm shadow-[0_4px_15px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-save"></i> Simpan Pengaturan Pejabat
+                        <i data-lucide="save" class="w-3.5 h-3.5 inline-block"></i> Simpan Pengaturan Pejabat
                     </button>
                 </div>
 
@@ -2009,11 +2013,11 @@
                     <div class="space-y-3">
                         <button onclick="backupData()"
                             class="w-full bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 py-2.5 rounded-xl font-bold text-sm border border-emerald-500/30 transition-all flex items-center justify-center gap-2">
-                            <i class="fas fa-download"></i> Backup Data
+                            <i data-lucide="download" class="w-3.5 h-3.5 inline-block"></i> Backup Data
                         </button>
                         <label
                             class="w-full bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 py-2.5 rounded-xl font-bold text-sm border border-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                            <i class="fas fa-upload"></i> Restore Data
+                            <i data-lucide="upload" class="w-3.5 h-3.5 inline-block"></i> Restore Data
                             <input type="file" accept=".json" onchange="restoreData(event)" class="hidden">
                         </label>
                     </div>
@@ -2024,7 +2028,7 @@
                     <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Keamanan</p>
                     <button onclick="changePassword()"
                         class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold text-sm border border-slate-700 transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-key"></i> Ubah Sandi Admin
+                        <i data-lucide="key-round" class="w-3.5 h-3.5 inline-block"></i> Ubah Sandi Admin
                     </button>
                 </div>
             </div>
@@ -2093,7 +2097,7 @@
         function generateCheckboxes(containerId, nameAttr) {
             const container = document.getElementById(containerId); if (!container) return; container.innerHTML = '';
             daftarBerkasWajib.forEach(b => {
-                container.innerHTML += `<label class="flex items-center space-x-2 cursor-pointer p-2.5 border border-brand-border rounded-xl hover:bg-white/5 transition-colors bg-[#0A0F1C] chk-label"><div class="relative flex items-center justify-center w-4 h-4"><input type="checkbox" name="${nameAttr}" value="${b}" onchange="checkIndividual('${nameAttr}', '${nameAttr === 'berkas' ? 'checkAllMain' : 'checkAllQuick'}'); styleCheckbox(this);" class="peer w-4 h-4 appearance-none rounded border border-gray-600 checked:bg-blue-500 checked:border-blue-500 cursor-pointer transition-all"><i class="fas fa-check absolute text-white text-[8px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i></div><span class="text-[11px] font-bold text-gray-300">${b}</span></label>`;
+                container.innerHTML += `<label class="flex items-center space-x-2 cursor-pointer p-2.5 border border-brand-border rounded-xl hover:bg-white/5 transition-colors bg-[#0A0F1C] chk-label"><div class="relative flex items-center justify-center w-4 h-4"><input type="checkbox" name="${nameAttr}" value="${b}" onchange="checkIndividual('${nameAttr}', '${nameAttr === 'berkas' ? 'checkAllMain' : 'checkAllQuick'}'); styleCheckbox(this);" class="peer w-4 h-4 appearance-none rounded border border-gray-600 checked:bg-blue-500 checked:border-blue-500 cursor-pointer transition-all"><i data-lucide="check" class="w-3.5 h-3.5 inline-block absolute text-white text-[8px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i></div><span class="text-[11px] font-bold text-gray-300">${b}</span></label>`;
             });
         }
         function styleCheckbox(cb) { const l = cb.closest('.chk-label'); if (cb.checked) { l.classList.add('bg-blue-900/20', 'border-blue-500/50'); l.classList.remove('bg-[#0A0F1C]', 'border-brand-border'); } else { l.classList.remove('bg-blue-900/20', 'border-blue-500/50'); l.classList.add('bg-[#0A0F1C]', 'border-brand-border'); } }
@@ -2151,7 +2155,7 @@
             if (!val || val.trim() === '') { dropdown.classList.add('hidden'); return; }
             const res = (masterPegawai || []).filter(p => p && p.nama && p.nama.toLowerCase().includes(val.toLowerCase()) && p.status !== 'mutasi');
             if (res.length === 0) dropdown.innerHTML = '<li class="p-3 text-xs text-gray-500 text-center">Data tidak ditemukan</li>';
-            else dropdown.innerHTML = res.map(p => `<li class="p-3 text-xs text-white hover:bg-blue-600 cursor-pointer transition-colors border-b border-brand-border/50 last:border-0" onmousedown="clickGlobalSearch('${escJS(p.nama)}')"><i class="fas fa-user-circle mr-2 opacity-50"></i> ${p.nama}</li>`).join('');
+            else dropdown.innerHTML = res.map(p => `<li class="p-3 text-xs text-white hover:bg-blue-600 cursor-pointer transition-colors border-b border-brand-border/50 last:border-0" onmousedown="clickGlobalSearch('${escJS(p.nama)}')"><i data-lucide="circle-user" class="w-3.5 h-3.5 inline-block mr-2 opacity-50"></i> ${p.nama}</li>`).join('');
             dropdown.classList.remove('hidden');
         }
         function closeGlobalSearch() { const dropdown = document.getElementById('globalSearchDropdown'); if (dropdown) dropdown.classList.add('hidden'); }
@@ -2273,6 +2277,7 @@
                     return;
                 }
                 if (incoming.length > 0) { dataBerkas = incoming; saveDataLocal(); }
+                if(typeof autoRepairData === 'function') autoRepairData();
                 updateFilterTahunOptions(); updateDashFilterTahun(); window.renderTable?.(); window.renderDashboard?.();
             });
             fbOnSnapshot(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), (docSnap) => {
@@ -2352,6 +2357,7 @@
                 dataBerkas.forEach(d => { if (d.namaPegawai && !existingMasterLower.has(d.namaPegawai.toLowerCase())) { masterPegawai.push({ nama: d.namaPegawai, nip: '', pangkat: '', jabatan: '', status: 'aktif', mutasiBulan: '', mutasiTahun: '', catatanUmum: '' }); existingMasterLower.add(d.namaPegawai.toLowerCase()); masterUpdated = true; } });
                 if (masterUpdated) saveMasterData();
             }
+            if(typeof autoRepairData === 'function') autoRepairData();
             updateSelectPegawai(); updateSelectProgram(); window.renderMasterProgram?.(); window.renderMasterDesa?.(); window.renderJadwal?.();
         }
 
@@ -2394,9 +2400,9 @@
                 <li class="bg-brand-panel p-4 rounded-2xl border border-brand-border flex justify-between items-center shadow-sm">
                     <div>
                         <span class="font-bold text-white text-sm block">${escJS(d.namaDesa)}</span>
-                        <span class="text-xs text-purple-400 font-medium mt-1 inline-block"><i class="fas fa-user-tie mr-1"></i> ${escJS(d.kepalaDesa)}</span>
+                        <span class="text-xs text-purple-400 font-medium mt-1 inline-block"><i data-lucide="user-round" class="w-3.5 h-3.5 inline-block mr-1"></i> ${escJS(d.kepalaDesa)}</span>
                     </div>
-                    <button type="button" onclick="hapusMasterDesa('${escJS(d.namaDesa)}')" class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
+                    <button type="button" onclick="hapusMasterDesa('${escJS(d.namaDesa)}')" class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i></button>
                 </li>`).join('');
         };
 
@@ -2711,15 +2717,16 @@
             }
             currentPegawai = currentPegawai.filter(Boolean);
 
-            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left max-h-60 overflow-y-auto custom-scrollbar p-1">';
+            let html = '<div class="mb-3"><input type="text" id="swalSearchPetugas" placeholder="🔍 Ketik nama petugas..." class="w-full bg-[#0A0F1C] text-white border border-[#1E293B] rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 transition-colors placeholder-gray-600" oninput="filterPetugasCheckboxes(this.value)"></div>';
+            html += '<div id="petugasCheckboxContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left max-h-60 overflow-y-auto custom-scrollbar p-1">';
             (masterPegawai || []).filter(m => m && m.status !== 'mutasi').forEach(m => {
                 const checked = currentPegawai.includes(m.nama) ? 'checked' : '';
                 const bgClass = checked ? 'bg-blue-900/20 border-blue-500/50' : 'bg-[#0A0F1C] border-[#1E293B]';
 
-                html += `<label class="flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-white/5 transition-colors chk-pegawai-label ${bgClass}">
+                html += `<label class="flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-white/5 transition-colors chk-pegawai-label ${bgClass}" data-nama="${escJS(m.nama).toLowerCase()}">
                     <input type="checkbox" class="swal-pegawai-cb hidden" value="${escJS(m.nama)}" ${checked} onchange="this.parentElement.classList.toggle('bg-blue-900/20', this.checked); this.parentElement.classList.toggle('border-blue-500/50', this.checked); this.parentElement.classList.toggle('bg-[#0A0F1C]', !this.checked); this.parentElement.classList.toggle('border-[#1E293B]', !this.checked);">
                     <div class="w-4 h-4 rounded border border-gray-500 flex items-center justify-center bg-transparent checked-indicator shrink-0">
-                        <i class="fas fa-check text-[10px] text-white opacity-0 transition-opacity"></i>
+                        <i data-lucide="check" class="w-3 h-3 inline-block text-white opacity-0 transition-opacity"></i>
                     </div>
                     <span class="text-xs text-gray-300 font-bold truncate leading-tight">${escJS(m.nama)}</span>
                 </label>`;
@@ -2728,7 +2735,7 @@
 
             html += `<style>
                 .swal-pegawai-cb:checked + .checked-indicator { background-color: #3B82F6 !important; border-color: #3B82F6 !important; }
-                .swal-pegawai-cb:checked + .checked-indicator i { opacity: 1 !important; }
+                .swal-pegawai-cb:checked + .checked-indicator svg { opacity: 1 !important; }
             </style>`;
 
             Swal.fire({
@@ -2747,6 +2754,20 @@
             }).then(res => {
                 if (res.isConfirmed) {
                     updateJadwalField(id, 'pegawai', res.value);
+                }
+            });
+        };
+
+        window.filterPetugasCheckboxes = function(query) {
+            const q = (query || '').toLowerCase().trim();
+            const labels = document.querySelectorAll('#petugasCheckboxContainer .chk-pegawai-label');
+            labels.forEach(label => {
+                const nama = label.getAttribute('data-nama') || '';
+                const isChecked = label.querySelector('.swal-pegawai-cb')?.checked;
+                if (isChecked || q === '' || nama.includes(q)) {
+                    label.style.display = '';
+                } else {
+                    label.style.display = 'none';
                 }
             });
         };
@@ -2794,12 +2815,12 @@
             let sortedBulan = Object.keys(groupedByBulan).sort((a, b) => daftarBulan.indexOf(a) - daftarBulan.indexOf(b));
 
             for (let bln of sortedBulan) {
-                html += `<tr class="bg-[#21163F]"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-purple-400 uppercase tracking-wider"><i class="fas fa-calendar-alt mr-2"></i>JADWAL ${escJS(bln)}</td></tr>`;
+                html += `<tr class="bg-[#21163F]"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-purple-400 uppercase tracking-wider"><i data-lucide="calendar-days" class="w-4 h-4 mr-2 inline-block"></i>JADWAL ${escJS(bln)}</td></tr>`;
                 const groupedKeg = groupedByBulan[bln];
 
                 for (let key in groupedKeg) {
                     gIdx++; const count = groupedKeg[key].length; const strIdx = String(gIdx); const isExpanded = expandedJadwalGroups.has(strIdx);
-                    html += `<tr class="bg-[#1A2235] cursor-pointer hover:bg-[#1E293B] transition-colors" onclick="toggleJadwalGroup('${gIdx}')"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-blue-400 pl-8"><i class="fas fa-chevron-right text-xs mr-2 transition-transform duration-200" style="transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}"></i>${escJS(key)} <span class="text-xs text-gray-500 font-normal ml-2">(${count} jadwal)</span></td></tr>`;
+                    html += `<tr class="bg-[#1A2235] cursor-pointer hover:bg-[#1E293B] transition-colors" onclick="toggleJadwalGroup('${gIdx}')"><td colspan="${isAdmin ? 7 : 6}" class="p-4 border-b border-brand-border font-bold text-blue-400 pl-8"><i data-lucide="chevron-right" class="inline-block text-xs mr-2 transition-transform duration-200" style="transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}"></i>${escJS(key)} <span class="text-xs text-gray-500 font-normal ml-2">(${count} jadwal)</span></td></tr>`;
 
                     groupedKeg[key].forEach(j => {
                         if (isAdmin) {
@@ -2808,14 +2829,14 @@
                                 <td class="p-2 align-top"><input type="text" value="${escJS(j.program) || ''}" onchange="updateJadwalField('${j.id}', 'program', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-[10px] text-purple-400 font-bold px-2 py-1.5 rounded focus:border-blue-500 outline-none placeholder-gray-600" placeholder="Kosong"></td>
                                 <td class="p-2 align-top"><input type="text" value="${escJS(j.kegiatan) || ''}" onchange="updateJadwalField('${j.id}', 'kegiatan', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"></td>
                                 <td class="p-2 align-top"><select onchange="updateJadwalField('${j.id}', 'desa', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none"><option value="${escJS(j.desa)}" selected hidden>${escJS(j.desa)}</option>${optDesa}</select></td>
-                                <td class="p-2 align-top"><div onclick="editPegawaiJadwal('${j.id}')" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded cursor-pointer hover:border-blue-500 min-h-[30px] flex items-center justify-between transition-colors shadow-inner"><span class="truncate pr-2">${escJS(j.pegawai).replace(/ \| /g, ', ') || '- Pilih Petugas -'}</span><i class="fas fa-chevron-down text-[10px] text-gray-500 shrink-0"></i></div></td>
+                                <td class="p-2 align-top"><div onclick="editPegawaiJadwal('${j.id}')" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded cursor-pointer hover:border-blue-500 min-h-[30px] flex items-center justify-between transition-colors shadow-inner"><span class="truncate pr-2">${escJS(j.pegawai).replace(/ \| /g, ', ') || '- Pilih Petugas -'}</span><i data-lucide="chevron-down" class="inline-block text-[10px] text-gray-500 shrink-0"></i></div></td>
                                 <td class="p-2 align-top"><input type="number" value="${j.dana || ''}" onchange="updateJadwalField('${j.id}', 'dana', this.value)" class="w-full bg-[#0A0F1C] border border-[#1E293B] text-xs text-white px-2 py-1.5 rounded focus:border-blue-500 outline-none text-right"></td>
                                 <td class="p-2 align-top text-center flex flex-col gap-1 items-center">
                                     <div class="flex gap-1 w-full">
-                                        <button onclick="printSPPD('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-colors py-1" title="Cetak SPPD"><i class="fas fa-print"></i> SPPD</button>
-                                        <button onclick="printRILL('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600 hover:text-white transition-colors py-1" title="Cetak RILL"><i class="fas fa-file-invoice-dollar"></i> RILL</button>
+                                        <button onclick="printSPPD('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-colors py-1" title="Cetak SPPD"><i data-lucide="printer" class="w-3 h-3 inline-block"></i> SPPD</button>
+                                        <button onclick="printRILL('${j.id}')" class="flex-1 text-[10px] font-bold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600 hover:text-white transition-colors py-1" title="Cetak RILL"><i data-lucide="file-text" class="w-3 h-3 inline-block"></i> RILL</button>
                                     </div>
-                                    <button onclick="hapusJadwalItem('${j.id}')" class="w-full text-[10px] font-bold rounded bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-600 hover:text-white transition-colors py-1"><i class="fas fa-trash"></i> Hapus</button>
+                                    <button onclick="hapusJadwalItem('${j.id}')" class="w-full text-[10px] font-bold rounded bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-600 hover:text-white transition-colors py-1"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i> Hapus</button>
                                 </td>
                             </tr>`;
                         } else {
@@ -2847,7 +2868,7 @@
             masterProgram = (masterProgram || []).filter(Boolean);
             safeSetText('masterProgramCount', masterProgram.length);
             if (masterProgram.length === 0) { list.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500 text-sm">Belum ada program.</div>`; return; }
-            list.innerHTML = masterProgram.map((p, idx) => `<li class="bg-brand-panel p-4 rounded-2xl border border-brand-border flex justify-between items-center shadow-sm"><div><span class="font-bold text-white text-sm block">${escJS(p.nama)}</span><span class="text-xs text-emerald-400 font-bold">${formatRp(p.anggaran)}</span></div><button type="button" onclick="hapusMasterProgram('${p.id}')" class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button></li>`).join('');
+            list.innerHTML = masterProgram.map((p, idx) => `<li class="bg-brand-panel p-4 rounded-2xl border border-brand-border flex justify-between items-center shadow-sm"><div><span class="font-bold text-white text-sm block">${escJS(p.nama)}</span><span class="text-xs text-emerald-400 font-bold">${formatRp(p.anggaran)}</span></div><button type="button" onclick="hapusMasterProgram('${p.id}')" class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i></button></li>`).join('');
         };
 
         // --- MANAJEMEN PEGAWAI & MUTASI ---
@@ -2988,7 +3009,7 @@
             if (filtered.length === 0) { list.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500 text-sm">Tidak ada pegawai ditemukan.</div>`; return; }
             list.innerHTML = filtered.map((m, idx) => {
                 const isMut = m.status === 'mutasi'; const badge = isMut ? `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase ml-2">Mutasi Sejak ${m.mutasiBulan.substring(0, 3)} ${m.mutasiTahun}</span>` : '';
-                return `<li class="bg-brand-panel p-4 rounded-2xl border ${isMut ? 'border-amber-500/20 opacity-70' : 'border-brand-border'} flex justify-between items-center shadow-sm hover:border-blue-500/50 transition-colors group"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full ${isMut ? 'bg-amber-500/10 text-amber-500' : 'bg-[#0A0F1C] text-gray-400'} border border-brand-border flex items-center justify-center text-sm font-black">${idx + 1}</div><div><span class="font-bold text-white text-sm flex items-center">${escJS(m.nama)}</span><div class="text-[10px] text-gray-500 mt-1">${m.nip ? `NIP. ${escJS(m.nip)}` : 'Non-ASN'} ${m.pangkat ? `| ${escJS(m.pangkat)}` : ''}</div>${badge}</div></div><div class="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"><button type="button" onclick="tandaiMutasi('${escJS(m.nama)}')" title="Tandai Mutasi/Aktif" class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white transition-colors flex items-center justify-center"><i class="fas fa-random text-xs"></i></button><button type="button" onclick="editMasterPegawai('${escJS(m.nama)}')" title="Edit Data (Pangkat/NIP)" class="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-colors flex items-center justify-center"><i class="fas fa-pen text-xs"></i></button><button type="button" onclick="hapusMasterPegawai('${escJS(m.nama)}')" title="Hapus Permanen" class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button></div></li>`;
+                return `<li class="bg-brand-panel p-4 rounded-2xl border ${isMut ? 'border-amber-500/20 opacity-70' : 'border-brand-border'} flex justify-between items-center shadow-sm hover:border-blue-500/50 transition-colors group"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full ${isMut ? 'bg-amber-500/10 text-amber-500' : 'bg-[#0A0F1C] text-gray-400'} border border-brand-border flex items-center justify-center text-sm font-black">${idx + 1}</div><div><span class="font-bold text-white text-sm flex items-center">${escJS(m.nama)}</span><div class="text-[10px] text-gray-500 mt-1">${m.nip ? `NIP. ${escJS(m.nip)}` : 'Non-ASN'} ${m.pangkat ? `| ${escJS(m.pangkat)}` : ''}</div>${badge}</div></div><div class="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"><button type="button" onclick="tandaiMutasi('${escJS(m.nama)}')" title="Tandai Mutasi/Aktif" class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white transition-colors flex items-center justify-center"><i data-lucide="shuffle" class="w-3 h-3 inline-block"></i></button><button type="button" onclick="editMasterPegawai('${escJS(m.nama)}')" title="Edit Data (Pangkat/NIP)" class="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-colors flex items-center justify-center"><i data-lucide="pen-line" class="w-3 h-3 inline-block"></i></button><button type="button" onclick="hapusMasterPegawai('${escJS(m.nama)}')" title="Hapus Permanen" class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i></button></div></li>`;
             }).join('');
         };
 
@@ -3200,7 +3221,7 @@
 
                     daftarBulan.forEach(m => {
                         const items = p.bulan[m]; const isNihil = dataNihil.some(n => n.namaPegawai === p.nama && n.bulan === m && String(n.tahun) === String(qTahun)); const isMutasi = isBulanMutasiAtauSetelahnya(p.obj, m, qTahun);
-                        let bulkCompleteBtn = ''; if (!isPublicMode) { bulkCompleteBtn = `<button onclick="event.stopPropagation(); window.bulkCompleteBulan('${safeName}', '${qTahun}', '${m}')" class="absolute top-1 right-1 w-5 h-5 bg-blue-500 hover:bg-blue-400 text-white rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_rgba(59,130,246,0.8)] z-10" title="Edit Masal Bulan Ini"><i class="fas fa-edit text-[10px]"></i></button>`; }
+                        let bulkCompleteBtn = ''; if (!isPublicMode) { bulkCompleteBtn = `<button onclick="event.stopPropagation(); window.bulkCompleteBulan('${safeName}', '${qTahun}', '${m}')" class="absolute top-1 right-1 w-5 h-5 bg-blue-500 hover:bg-blue-400 text-white rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_rgba(59,130,246,0.8)] z-10" title="Edit Masal Bulan Ini"><i data-lucide="pencil" class="w-3 h-3 inline-block"></i></button>`; }
                         if (items && items.length > 0) {
                             const total = items.length; let lengkap = 0; let sortedItems = [...items].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
                             let datesHtml = '';
@@ -3251,7 +3272,7 @@
                     if (totalKegiatan === 0) {
                         missingHtml = `<span class="text-xs text-gray-500 italic">Belum ada input.</span>`;
                     } else if (revisiListHtml === '') {
-                        missingHtml = `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2.5 py-1 rounded-md font-bold shadow-sm inline-block mb-1.5"><i class="fas fa-check-circle mr-1"></i> Sempurna</span>`;
+                        missingHtml = `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2.5 py-1 rounded-md font-bold shadow-sm inline-block mb-1.5"><i data-lucide="badge-check" class="w-3.5 h-3.5 inline-block mr-1"></i> Sempurna</span>`;
                     } else {
                         missingHtml = `<div class="w-full max-h-32 overflow-y-auto custom-scrollbar pr-1">${revisiListHtml}</div>`;
                     }
@@ -3269,7 +3290,7 @@
                 let listData = filteredData.filter(d => (d.namaPegawai || '').toLowerCase().includes(qSearch) || (d.program || '').toLowerCase().includes(qSearch)); listData.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)); count = listData.length;
                 listData.forEach(item => {
                     const isComplete = (item.berkasDilengkapi || []).length === daftarBerkasWajib.length; const missing = daftarBerkasWajib.filter(b => !(item.berkasDilengkapi || []).includes(b)); const safeNameItem = escJS(item.namaPegawai);
-                    html += `<tr class="hover:bg-white/5 transition-colors border-b border-brand-border"><td class="p-4 align-top"><div class="text-xs font-bold text-white">${formatShortDate(item.tanggal)}</div><div class="text-[10px] font-semibold text-blue-400 mt-1">${escJS(item.program || 'Umum')}</div></td><td class="p-4 align-top"><div class="font-bold text-sm text-white">${escJS(item.namaPegawai)}</div><div class="text-[10px] text-gray-400 bg-[#0A0F1C] px-2 py-0.5 rounded border border-brand-border inline-block mt-1">${item.bulan}</div></td><td class="p-4 align-top">${isComplete ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-1 rounded-md font-bold uppercase shadow-sm inline-block"><i class="fas fa-check mr-1"></i> Lengkap</span>` : `<span class="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] px-2 py-1 rounded-md font-bold uppercase mb-1 shadow-sm inline-block"><i class="fas fa-times mr-1"></i> Kurang Berkas</span><div class="text-[10px] text-red-300/70 font-medium leading-tight">Kurang: ${missing.join(', ')}</div>`}${item.keterangan ? `<div class="text-[10px] text-amber-300 bg-amber-500/10 p-2 border border-amber-500/20 rounded-md mt-2 shadow-sm"><i class="fas fa-comment-dots mr-1"></i> ${escJS(item.keterangan)}</div>` : ''}</td><td class="p-4 text-center align-middle print:hidden"><div class="flex items-center justify-center gap-2"><button onclick="openQuickModal('${item.id}', '${safeNameItem}', '${item.bulan}', '${item.tahun}')" class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white transition-colors border border-blue-500/30"><i class="fas fa-pen text-xs"></i></button><button onclick="deleteSingleData('${item.id}')" class="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white transition-colors border border-red-500/30"><i class="fas fa-trash text-xs"></i></button></div></td></tr>`;
+                    html += `<tr class="hover:bg-white/5 transition-colors border-b border-brand-border"><td class="p-4 align-top"><div class="text-xs font-bold text-white">${formatShortDate(item.tanggal)}</div><div class="text-[10px] font-semibold text-blue-400 mt-1">${escJS(item.program || 'Umum')}</div></td><td class="p-4 align-top"><div class="font-bold text-sm text-white">${escJS(item.namaPegawai)}</div><div class="text-[10px] text-gray-400 bg-[#0A0F1C] px-2 py-0.5 rounded border border-brand-border inline-block mt-1">${item.bulan}</div></td><td class="p-4 align-top">${isComplete ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-1 rounded-md font-bold uppercase shadow-sm inline-block"><i data-lucide="check" class="w-3.5 h-3.5 inline-block mr-1"></i> Lengkap</span>` : `<span class="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] px-2 py-1 rounded-md font-bold uppercase mb-1 shadow-sm inline-block"><i data-lucide="x" class="w-3.5 h-3.5 inline-block mr-1"></i> Kurang Berkas</span><div class="text-[10px] text-red-300/70 font-medium leading-tight">Kurang: ${missing.join(', ')}</div>`}${item.keterangan ? `<div class="text-[10px] text-amber-300 bg-amber-500/10 p-2 border border-amber-500/20 rounded-md mt-2 shadow-sm"><i data-lucide="message-circle" class="w-3.5 h-3.5 inline-block mr-1"></i> ${escJS(item.keterangan)}</div>` : ''}</td><td class="p-4 text-center align-middle print:hidden"><div class="flex items-center justify-center gap-2"><button onclick="openQuickModal('${item.id}', '${safeNameItem}', '${item.bulan}', '${item.tahun}')" class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white transition-colors border border-blue-500/30"><i data-lucide="pen-line" class="w-3 h-3 inline-block"></i></button><button onclick="deleteSingleData('${item.id}')" class="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white transition-colors border border-red-500/30"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i></button></div></td></tr>`;
                 });
             }
             return { html, count };
@@ -3408,7 +3429,7 @@
             if (!isAdmin) return;
             const elId = document.getElementById('quickId'); if (elId) elId.value = id || '';
             const elNamaH = document.getElementById('quickNamaHidden'); if (elNamaH) elNamaH.value = nama;
-            safeSetText('quickNama', nama); safeSetText('quickPeriode', `${bulan} ${tahun}`); safeSetHTML('quickModalTitle', id ? '<i class="fas fa-edit text-blue-400"></i> Edit SPJ' : '<i class="fas fa-plus text-blue-400"></i> Tambah SPJ Manual');
+            safeSetText('quickNama', nama); safeSetText('quickPeriode', `${bulan} ${tahun}`); safeSetHTML('quickModalTitle', id ? '<i data-lucide="pencil" class="w-3.5 h-3.5 inline-block text-blue-400"></i> Edit SPJ' : '<i data-lucide="plus" class="w-3.5 h-3.5 inline-block text-blue-400"></i> Tambah SPJ Manual');
             generateCheckboxes('quickChecklistContainer', 'quickBerkas');
             dataBerkas = (dataBerkas || []).filter(Boolean);
             let item = id ? dataBerkas.find(d => d.id === id) : null;
@@ -3472,7 +3493,7 @@
             if (pData.length === 0) listContainer.innerHTML = `<div class="p-8 text-center text-gray-500 font-medium">Belum ada riwayat kegiatan.</div>`;
             else listContainer.innerHTML = pData.map(item => {
                 const isComplete = (item.berkasDilengkapi || []).length === daftarBerkasWajib.length; const missing = daftarBerkasWajib.filter(b => !(item.berkasDilengkapi || []).includes(b));
-                return `<div class="p-5 bg-[#0A0F1C] rounded-2xl border border-brand-border flex flex-col sm:flex-row justify-between gap-4 transition-colors shadow-sm"><div><div class="flex items-center gap-3 mb-3"><span class="font-bold text-white text-sm">${formatShortDate(item.tanggal)}</span><span class="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">${escJS(item.program || 'Umum')}</span></div>${isComplete ? `<span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 uppercase"><i class="fas fa-check-circle"></i> Berkas Lengkap</span>` : `<div class="text-[10px] font-bold text-red-400 bg-red-500/10 px-2.5 py-1.5 rounded border border-red-500/20 uppercase mt-1"><i class="fas fa-exclamation-triangle"></i> Belum Lengkap. <span class="text-red-200/70 normal-case ml-1">Kurang: ${missing.join(', ')}</span></div>`}${item.nominal ? `<div class="text-xs font-bold text-gray-400 mt-3"><i class="fas fa-wallet mr-1 text-blue-400"></i> Dana: <span class="text-emerald-400">${formatRp(item.nominal)}</span></div>` : ''}${item.keterangan ? `<div class="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-lg mt-3 shadow-sm"><i class="fas fa-sticky-note mr-1 opacity-70"></i> ${escJS(item.keterangan)}</div>` : ''}</div>${isAdmin ? `<div class="flex sm:flex-col justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-brand-border"><button onclick="openQuickModal('${item.id}', '${escJS(nama)}', '${item.bulan}', '${tahun}')" class="text-xs font-bold bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl text-blue-400 hover:bg-blue-600 hover:text-white transition-all w-full sm:w-auto"><i class="fas fa-edit"></i> Edit</button><button onclick="deleteSingleData('${item.id}', true)" class="text-xs font-bold bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all w-full sm:w-auto"><i class="fas fa-trash"></i> Hapus</button></div>` : ''}</div>`;
+                return `<div class="p-5 bg-[#0A0F1C] rounded-2xl border border-brand-border flex flex-col sm:flex-row justify-between gap-4 transition-colors shadow-sm"><div><div class="flex items-center gap-3 mb-3"><span class="font-bold text-white text-sm">${formatShortDate(item.tanggal)}</span><span class="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">${escJS(item.program || 'Umum')}</span></div>${isComplete ? `<span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 uppercase"><i data-lucide="badge-check" class="w-3 h-3 inline-block"></i> Berkas Lengkap</span>` : `<div class="text-[10px] font-bold text-red-400 bg-red-500/10 px-2.5 py-1.5 rounded border border-red-500/20 uppercase mt-1"><i data-lucide="triangle-alert" class="w-3 h-3 inline-block"></i> Belum Lengkap. <span class="text-red-200/70 normal-case ml-1">Kurang: ${missing.join(', ')}</span></div>`}${item.nominal ? `<div class="text-xs font-bold text-gray-400 mt-3"><i data-lucide="wallet" class="inline-block mr-1 text-blue-400"></i> Dana: <span class="text-emerald-400">${formatRp(item.nominal)}</span></div>` : ''}${item.keterangan ? `<div class="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-lg mt-3 shadow-sm"><i data-lucide="sticky-note" class="inline-block mr-1 opacity-70"></i> ${escJS(item.keterangan)}</div>` : ''}</div>${isAdmin ? `<div class="flex sm:flex-col justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-brand-border"><button onclick="openQuickModal('${item.id}', '${escJS(nama)}', '${item.bulan}', '${tahun}')" class="text-xs font-bold bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl text-blue-400 hover:bg-blue-600 hover:text-white transition-all w-full sm:w-auto"><i data-lucide="pencil" class="w-3 h-3 inline-block"></i> Edit</button><button onclick="deleteSingleData('${item.id}', true)" class="text-xs font-bold bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all w-full sm:w-auto"><i data-lucide="trash-2" class="w-3 h-3 inline-block"></i> Hapus</button></div>` : ''}</div>`;
             }).join('');
             const modal = document.getElementById('detailPegawaiModal'); if (modal) modal.classList.remove('hidden');
         }
@@ -3558,6 +3579,17 @@
         // --- AUTO REPAIR START ---
         function autoRepairData() {
             if(!masterPegawai || masterPegawai.length === 0) return;
+
+            // 0. Deduplicate dataBerkas by id (keep latest)
+            if(dataBerkas && dataBerkas.length > 0) {
+                const seen = new Map();
+                dataBerkas.forEach(d => { if(d && d.id) seen.set(d.id, d); });
+                if(seen.size < dataBerkas.length) {
+                    dataBerkas = Array.from(seen.values());
+                    localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas));
+                    console.log('[autoRepair] Removed ' + (dataBerkas.length - seen.size) + ' duplicate dataBerkas entries');
+                }
+            }
             
             // 1. Deduplicate masterPegawai based on name (case-insensitive)
             let uniqueNames = new Set();
@@ -3605,6 +3637,42 @@
             };
         }
         // --- AUTO REPAIR END ---
+
+        // --- LUCIDE ICON RENDERER ---
+        function refreshLucideIcons() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                try { lucide.createIcons(); } catch(e) {}
+            }
+        }
+
+        // Hook into all render functions to auto-refresh Lucide icons
+        ['renderDashboard', 'renderTable', 'renderJadwal', 'renderMasterPegawai', 'renderMasterProgram', 'renderMasterDesa'].forEach(fnName => {
+            if (typeof window[fnName] === 'function') {
+                const original = window[fnName];
+                window[fnName] = function() {
+                    const result = original.apply(this, arguments);
+                    setTimeout(refreshLucideIcons, 50);
+                    return result;
+                };
+            }
+        });
+
+        // Also refresh on SweetAlert open
+        if (typeof Swal !== 'undefined') {
+            const origFire = Swal.fire;
+            Swal.fire = function() {
+                const result = origFire.apply(this, arguments);
+                if (result && result.then) {
+                    result.then(() => setTimeout(refreshLucideIcons, 50));
+                }
+                setTimeout(refreshLucideIcons, 100);
+                return result;
+            };
+        }
+
+        // Initial render
+        setTimeout(refreshLucideIcons, 200);
+        // --- END LUCIDE ---
 
     </script>
 </body>
