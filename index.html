@@ -3546,6 +3546,58 @@
             reader.readAsText(file);
         }
 
+    
+        // --- AUTO REPAIR START ---
+        function autoRepairData() {
+            if(!masterPegawai || masterPegawai.length === 0) return;
+            
+            // 1. Deduplicate masterPegawai based on name (case-insensitive)
+            let uniqueNames = new Set();
+            let newMaster = [];
+            masterPegawai.forEach(p => {
+                if(!p || !p.nama) return;
+                const safeName = String(p.nama).trim().toLowerCase();
+                if(!uniqueNames.has(safeName)) {
+                    uniqueNames.add(safeName);
+                    newMaster.push(p);
+                }
+            });
+            if(masterPegawai.length !== newMaster.length) {
+                masterPegawai = newMaster;
+                localStorage.setItem('bokMasterPegawai', JSON.stringify(masterPegawai));
+                if(typeof useFirebase !== 'undefined' && useFirebase && currentUser) {
+                     fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'masterPegawai', 'list'), { names: masterPegawai });
+                }
+            }
+
+            // 2. Fix orphaned or mis-cased records in dataBerkas
+            let changedBerkas = false;
+            if(typeof dataBerkas !== 'undefined' && dataBerkas && dataBerkas.length > 0) {
+                dataBerkas.forEach(d => {
+                    const safeDName = String(d.namaPegawai).trim().toLowerCase();
+                    const correctMaster = masterPegawai.find(m => m && String(m.nama).trim().toLowerCase() === safeDName);
+                    if(correctMaster && d.namaPegawai !== correctMaster.nama) {
+                        d.namaPegawai = correctMaster.nama;
+                        changedBerkas = true;
+                        if(typeof useFirebase !== 'undefined' && useFirebase && currentUser) {
+                            fbSetDoc(fbDoc(db, 'artifacts', appId, 'public', 'data', 'bokData', d.id), d);
+                        }
+                    }
+                });
+                if(changedBerkas) localStorage.setItem('bokChecklistV2', JSON.stringify(dataBerkas));
+            }
+        }
+        
+        // Run it immediately after rendering is requested to clean up state
+        if(typeof window.renderDashboard === 'function') {
+            const originalRenderDashboard = window.renderDashboard;
+            window.renderDashboard = function() {
+                autoRepairData();
+                originalRenderDashboard();
+            };
+        }
+        // --- AUTO REPAIR END ---
+
     </script>
 </body>
 
